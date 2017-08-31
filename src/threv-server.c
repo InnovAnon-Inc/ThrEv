@@ -6,11 +6,13 @@
 
 /*#include <restart.h>*/
 #include <ezudp-server.h>
+#include <thpool.h>
 
 typedef struct {
    ev_io io;
    struct ev_loop *loop;
    socket_t s;
+   threadpool thpool;
 } socket_rd_watcher_t;
 
 typedef struct {
@@ -20,6 +22,7 @@ typedef struct {
    ssize_t recv_len;
    struct sockaddr_in si_other;
    socklen_t slen;
+   struct ev_loop *loop;
 } socket_wr_watcher_t;
 
 static void
@@ -38,6 +41,14 @@ socket_wr_cb (EV_P_ ev_io *w_, int revents) {
 
    ev_io_stop (EV_A_ &(w->io));
    free (w);
+}
+
+static void thpoolcb (void *arg) {
+	/* TODO how to syncronize the event loop? */
+   socket_wr_watcher_t *wr_watcher = (socket_wr_watcher_t *) arg;
+   ev_io_init (&(wr_watcher->io), socket_wr_cb, wr_watcher->s, EV_WRITE);
+   ev_io_start (wr_watcher->loop, (ev_io *) wr_watcher);
+   puts ("thpoolcb()");
 }
 
 static void
@@ -62,12 +73,14 @@ socket_rd_cb (EV_P_ ev_io *w_, int revents) {
    }
 
    wr_watcher->s = w->s;
+   wr_watcher->loop = w->loop;
 
-   ev_io_init (&(wr_watcher->io), socket_wr_cb, wr_watcher->s, EV_WRITE);
-   ev_io_start (w->loop, (ev_io *) wr_watcher);
+   thpool_add_work (w->thpool, thpoolcb, wr_watcher);
 }
-
-int ezudpcb (socket_t s, void *unused) {
+/*
+void thpoolcb (void *arg) {
+   socket_t s = (socket_t) arg;
+	
    struct ev_loop *loop = EV_DEFAULT;
 
    socket_rd_watcher_t rd_watcher;
@@ -77,8 +90,40 @@ int ezudpcb (socket_t s, void *unused) {
    ev_io_start (loop, (ev_io *) &rd_watcher);
 
    ev_run (loop, 0);
+}
+*/
+static int ezthpoolcb (threadpool thpool, socket_t s) {
+   /*return thpool_add_work (
+      thpool, thpoolcb, (void *) s);*/
+      
+   struct ev_loop *loop = EV_DEFAULT;
 
+   socket_rd_watcher_t rd_watcher;
+   rd_watcher.loop = loop;
+   rd_watcher.s = s;
+   rd_watcher.thpool = thpool;
+   ev_io_init (&(rd_watcher.io), socket_rd_cb, s, EV_READ);
+   ev_io_start (loop, (ev_io *) &rd_watcher);
+
+   ev_run (loop, 0);
    return 0;
+}
+
+int ezthpool (int (*cb) (threadpool, socket_t), socket_t arg) {
+	threadpool thpool = thpool_init (2);
+	
+	if (cb (thpool, arg) != 0) {
+		thpool_destroy (thpool);
+		return -1;
+	}
+	
+	thpool_wait (thpool);
+	thpool_destroy (thpool);
+	return 0;
+}
+
+static int ezudpcb (socket_t s, void *unused) {
+   return ezthpool (ezthpoolcb, s);
 }
 
 int main (void) {
