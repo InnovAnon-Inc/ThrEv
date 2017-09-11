@@ -18,3 +18,5 @@ threv_server_LDFLAGS = -lev -lm -lezudp-server -lrestart -lthpool
 #threv_server_CFLAGS = -Wextra -pedantic -ansi
 threv_client_CFLAGS = -Wextra -pedantic
 threv_server_CFLAGS = -Wextra -pedantic
+
+AM_CPPFLAGS = -D__STDC_INT64__
