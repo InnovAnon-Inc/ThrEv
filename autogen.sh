@@ -16,7 +16,10 @@ autoreconf --install
 if [ $# -eq 0 ] ; then exit 0
 else
 	test "x$1" == xmake
-	./configure
+	DIR="$(readlink -f `pwd`)"
+	mkdir ../ThrEv-build
+	cd ../ThrEv-build
+	"$DIR/configure" "--prefix=$HOME"
 	make
 	make install
 fi
