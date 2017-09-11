@@ -1,3 +1,7 @@
+#if HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <stdio.h> /* for puts */
 #include <stdlib.h>
 #include <netinet/in.h>
@@ -80,7 +84,7 @@ socket_rd_cb (EV_P_ ev_io *w_, int revents) {
 /*
 void thpoolcb (void *arg) {
    socket_t s = (socket_t) arg;
-	
+
    struct ev_loop *loop = EV_DEFAULT;
 
    socket_rd_watcher_t rd_watcher;
@@ -95,7 +99,7 @@ void thpoolcb (void *arg) {
 static int ezthpoolcb (threadpool thpool, socket_t s) {
    /*return thpool_add_work (
       thpool, thpoolcb, (void *) s);*/
-      
+
    struct ev_loop *loop = EV_DEFAULT;
 
    socket_rd_watcher_t rd_watcher;
@@ -111,12 +115,12 @@ static int ezthpoolcb (threadpool thpool, socket_t s) {
 
 int ezthpool (int (*cb) (threadpool, socket_t), socket_t arg) {
 	threadpool thpool = thpool_init (2);
-	
+
 	if (cb (thpool, arg) != 0) {
 		thpool_destroy (thpool);
 		return -1;
 	}
-	
+
 	thpool_wait (thpool);
 	thpool_destroy (thpool);
 	return 0;
@@ -126,11 +130,35 @@ static int ezudpcb (socket_t s, void *unused) {
    return ezthpool (ezthpoolcb, s);
 }
 
+
+
+
+
+
+typedef struct {
+
+} io_thread_t;
+
+void *io_thread_cb (void *_arg) {
+   io_thread_t *arg = (io_thread_t *) _arg;
+   /* alloc buf, read into buf, enqueue buf */
+   /* dequeue buf, write from buf, dealloc buf */
+   return NULL;
+}
+
 int main (void) {
+   /*
    const int err = ezudp_server (1234, INADDR_ANY, ezudpcb, NULL);
    if (err != 0) {
       fprintf (stderr, "err:%d\n", err);
       return EXIT_FAILURE;
-   }
+   }*/
+
+   pthread_t io_thread;
+   io_thread_t io_thread_arg;
+
+   pthread_create (&io_thread, NULL, io_thread_cb, io_thread_arg);
+   work_thread_cb ();
+
    return EXIT_SUCCESS;
 }
