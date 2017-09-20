@@ -242,7 +242,7 @@ static int init_io_thread_cb (
       printf ("i:%d\n", (int) i); fflush (stdout);
       args->bufs[i].buf = bufs + i * args->bufsz;
 
-#ifdef 0
+#ifdef WTF
       memset (get_buf (args->bufs, i, bufsz), 0, mybufsz);
 
       get_buf (args->bufs, i, bufsz)->buf =
@@ -269,7 +269,7 @@ static int init_io_thread_cb (
    }
 
    for (i = 0; i != nbuf; i++)
-#ifdef 0
+#ifdef WTF
       error_check (tscpaq_enqueue (
          &(args->q_in),
          get_buf (args->bufs, i, bufsz)) != 0)
