@@ -446,28 +446,33 @@ static void *worker_thread_cb (void *_arg) {
    while (true) {
       buffer_t const *restrict buf_in;
       buffer_t *restrict buf_out;
-
+puts ("a"); fflush (stdout);
       error_check (tscpaq_dequeue (&(in->q_out), (void const *restrict *restrict) &buf_in)   != 0) {
          TODO (kill other thread);
          return NULL;
       }
+puts ("b"); fflush (stdout);
       error_check (tscpaq_dequeue (&(out->q_in), (void const *restrict *restrict) &buf_out)  != 0) {
          TODO (kill other thread);
          return NULL;
       }
+puts ("c"); fflush (stdout);
       TODO (something else)
 
       /*memcpy (buf_out->buf, buf_in->buf, min (buf_in->n, buf_out->n));*/
       memcpy (buf_out->buf, buf_in->buf, buf_in->n);
 
+puts ("d"); fflush (stdout);
       error_check (tscpaq_enqueue (&(out->q_out), buf_out) != 0) {
          TODO (kill other thread);
          return NULL;
       }
+puts ("e"); fflush (stdout);
       error_check (tscpaq_enqueue (&(in->q_in),   buf_in)  != 0) {
          TODO (kill other thread);
          return NULL;
       }
+puts ("f"); fflush (stdout);
    }
    return NULL;
 }
@@ -481,8 +486,8 @@ int main (void) {
    pthread_t io_thread, worker_thread;
    error_check (alloc_io (&dest, &src,
       in_bufsz, in_nbuf, out_bufsz, out_nbuf) != 0) return EXIT_FAILURE;
-   pthread_create (&io_thread, NULL, io_thread_cb, &src);
-   pthread_create (&worker_thread, NULL, worker_thread_cb, &dest);
+   pthread_create (&io_thread, NULL, io_thread_cb, &dest);
+   pthread_create (&worker_thread, NULL, worker_thread_cb, &src);
    pthread_join (io_thread, NULL);
    pthread_join (worker_thread, NULL);
    error_check (free_io (&dest, &src) != 0) return EXIT_FAILURE;
