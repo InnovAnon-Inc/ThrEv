@@ -270,20 +270,20 @@ static void *io_thread_cb (void *_arg) {
    io_thread_cb_t *restrict arg_out;
    char *restrict buf_in;
    char *restrict buf_out;
-
+puts ("d1"); fflush (stdout);
    arg_in  = &(arg->in);
    arg_out = &(arg->out);
-
+puts ("e1"); fflush (stdout);
    /* reader */
    error_check (tscpaq_dequeue (&(arg_in->q_in), (void const *restrict *restrict) &buf_in)    != 0) return NULL;
    error_check (r_read (STDIN_FILENO, buf_in, arg_in->bufsz) != 0) return NULL;
    error_check (tscpaq_enqueue (&(arg_in->q_out), buf_in)    != 0) return NULL;
-
+puts ("f1"); fflush (stdout);
    /* writer */
    error_check (tscpaq_dequeue (&(arg_out->q_out), (void const *restrict *restrict) &buf_out)      != 0) return NULL;
    error_check (r_write (STDOUT_FILENO, buf_out, arg_out->bufsz)  != 0) return NULL;
    error_check (tscpaq_enqueue (&(arg_out->q_in),   buf_out)      != 0) return NULL;
-
+puts ("g1"); fflush (stdout);
    return NULL;
 }
 
@@ -301,27 +301,32 @@ int main (void) {
    io_thread_cb_t *restrict args_out;
    io_thread_cb2_t args;
    pthread_t io_thread;
-
+puts ("a"); fflush (stdout);
    args_in  = &(args.in);
    args_out = &(args.out);
-
+puts ("b"); fflush (stdout);
    error_check (init_io_thread_cb (args_in,  (size_t)   3, (size_t) 3) != 0) return EXIT_FAILURE;
    error_check (init_io_thread_cb (args_out, (size_t)   3, (size_t) 3) != 0) return EXIT_FAILURE;
-
+puts ("c"); fflush (stdout);
    pthread_create (&io_thread, NULL, io_thread_cb, (void *) &args);
-
+puts ("d0"); fflush (stdout);
    while (true) {
+puts ("e0"); fflush (stdout);
       char const *restrict buf_in;
       char *restrict buf_out;
 
       error_check (tscpaq_dequeue (&(args_in->q_out), (void const *restrict *restrict) &buf_in)   != 0) break;
       error_check (tscpaq_dequeue (&(args_out->q_in), (void const *restrict *restrict) &buf_out)  != 0) break;
       TODO (something else)
+puts ("f0"); fflush (stdout);
       memcpy (buf_out, buf_in, min (args_in->bufsz, args_out->bufsz));
+puts ("g0"); fflush (stdout);
       error_check (tscpaq_enqueue (&(args_out->q_in),  buf_out) != 0) break;
       error_check (tscpaq_enqueue (&(args_in->q_in),   buf_in)  != 0) break;
+puts ("h0"); fflush (stdout);
    }
    /*__builtin_unreachable ();*/
+puts ("i0"); fflush (stdout);
 
    TODO (pthread kill/join)
    error_check (free_io_thread_cb (args_out) != 0) return EXIT_FAILURE;
