@@ -206,7 +206,7 @@ int main (void) {
 	#pragma GCC diagnostic ignored "-Wpadded"
 typedef struct {
    size_t bufsz, nbuf;
-   tscpaq_t q_in, q_out
+   tscpaq_t q_in, q_out;
    char *restrict bufs;
 } io_thread_cb_t;
 	#pragma GCC diagnostic pop
