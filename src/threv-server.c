@@ -257,12 +257,12 @@ static void *io_thread_cb (void *_arg) {
    arg_out = &(arg->out);
 
    /* reader */
-   error_check (tscpaq_dequeue (&(arg_in->q_in), &buf_in)    != 0) return NULL;
+   error_check (tscpaq_dequeue (&(arg_in->q_in), (void const *restrict *restrict) &buf_in)    != 0) return NULL;
    error_check (r_read (STDIN_FILENO, buf_in, arg_in->bufsz) != 0) return NULL;
    error_check (tscpaq_enqueue (&(arg_in->q_out), buf_in)    != 0) return NULL;
 
    /* writer */
-   error_check (tscpaq_dequeue (&(arg_out->q_out), &buf_out)      != 0) return NULL;
+   error_check (tscpaq_dequeue (&(arg_out->q_out), (void const *restrict *restrict) &buf_out)      != 0) return NULL;
    error_check (r_write (STDOUT_FILENO, buf_out, arg_out->bufsz)  != 0) return NULL;
    error_check (tscpaq_enqueue (&(arg_out->q_in),   buf_out)      != 0) return NULL;
 
@@ -299,7 +299,7 @@ int main (void) {
       char const *restrict buf_in;
       char *restrict buf_out;
 
-      error_check (tscpaq_dequeue (&(args_in->q_out), &buf_in)  != 0) break;
+      error_check (tscpaq_dequeue (&(args_in->q_out), (void const *restrict *restrict) &buf_in)  != 0) break;
       TODO (something else)
       memcpy (buf_out, buf_in, bufsz);
       error_check (tscpaq_enqueue (&(args_out->q_in),  buf_out) != 0) break;
