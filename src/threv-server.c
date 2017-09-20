@@ -263,7 +263,7 @@ typedef struct {
    io_thread_cb_t in, out;
 } io_thread_cb2_t;
 
-__attribute__ ((nonnull (1), nothrow, warn_unused_result))
+__attribute__ ((nonnull (1, 2, 4), nothrow, warn_unused_result))
 static int io_thread_cb_common (
    tscpaq_t *restrict q_in,
    tscpaq_t *restrict q_out,
@@ -290,7 +290,7 @@ __attribute__ ((nonnull (1), nothrow, warn_unused_result))
 static int io_thread_cb_rd (io_thread_cb_t *restrict arg_in) {
    return io_thread_cb_common (
       &(arg_in->q_in), &(arg_in->q_out), arg_in->bufsz,
-      r_read, STDIN_FILENO));
+      r_read, STDIN_FILENO);
 #ifdef OTHER
    char *restrict buf_in;
    ssize_t rd;
