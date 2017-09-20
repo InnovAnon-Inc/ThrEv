@@ -527,9 +527,11 @@ int main (void) {
    pthread_join (worker_thread, NULL);*/
 	#pragma GCC diagnostic push
 	#pragma GCC diagnostic ignored "-Wunused-result"
-   read_pipe (dest.in);
+   /*read_pipe (dest.in);
    write_pipe (dest.in);
-   puts ("test"); fflush (stdout);
+   puts ("test"); fflush (stdout);*/
+
+
 
 
 
@@ -543,6 +545,7 @@ puts ("c"); fflush (stdout);
 
       /*memcpy (buf_out->buf, buf_in->buf, min (buf_in->n, buf_out->n));*/
       memcpy (buf_out->buf, buf_in->buf, buf_in->n);
+      buf_out->n = buf_in->n;
 
 puts ("d"); fflush (stdout);
       tscpaq_enqueue (&(dest.out->q_out), buf_out);
