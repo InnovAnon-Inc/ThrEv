@@ -322,23 +322,23 @@ __attribute__ ((nonnull (1), nothrow, warn_unused_result))
 static int read_pipe (pipe_t *restrict p) {
    buffer_t *restrict buf;
    ssize_t n;
-puts ("BA"); fflush (stdout);
+
    error_check (tscpaq_dequeue (
       &(p->q_in), (void const *restrict *restrict) &buf) != 0)
       return -1;
-puts ("BB"); fflush (stdout);
+
    n = r_read (STDIN_FILENO, buf->buf, p->bufsz - 1);
-puts ("BC"); fflush (stdout);
+
    error_check (n < 0) return -2;
-puts ("BD"); fflush (stdout);
+
    buf->buf[(size_t) n] = '\0';
    buf->n = (size_t) n + 1;
-puts ("BE"); fflush (stdout);
+
    if (n == 0) return /*0*/ -1;
-puts ("BF"); fflush (stdout);
+
    error_check (tscpaq_enqueue (&(p->q_out), buf) != 0)
       return -3;
-puts ("BG"); fflush (stdout);
+
    return 0;
 }
 
@@ -346,22 +346,22 @@ __attribute__ ((nonnull (1), nothrow, warn_unused_result))
 static int write_pipe (pipe_t *restrict p) {
    buffer_t *restrict buf;
    ssize_t n;
-puts ("CA"); fflush (stdout);
+
    error_check (tscpaq_dequeue (
       &(p->q_out), (void const *restrict *restrict) &buf) != 0)
       return -1;
-puts ("CB"); fflush (stdout);
+
    n = r_write (STDOUT_FILENO, buf->buf, buf->n);
-puts ("CC"); fflush (stdout);
+
    error_check (n < 0) return -2;
-puts ("CD"); fflush (stdout);
+
    buf->n = (size_t) n;
-puts ("CE"); fflush (stdout);
+
    if (n == 0) return /*0*/ -1;
-puts ("CF"); fflush (stdout);
+
    error_check (tscpaq_enqueue (&(p->q_in), buf) != 0)
       return -3;
-puts ("CG"); fflush (stdout);
+
    return 0;
 }
 
@@ -444,12 +444,12 @@ static void *io_thread_cb (void *_arg) {
    in  = arg->in;
    out = arg->out;
    while (true) {
-puts ("A"); fflush (stdout);
+
       error_check (read_pipe (in)  != 0) return NULL;
-puts ("B"); fflush (stdout);
+
       /*if (arg_in == 0) return NULL;*/
       error_check (write_pipe (out) != 0) return NULL;
-puts ("C"); fflush (stdout);
+
    }
    return NULL;
 }
@@ -478,34 +478,34 @@ static void *worker_thread_cb (void *_arg) {
    while (true) {
       buffer_t const *restrict buf_in;
       buffer_t *restrict buf_out;
-puts ("a"); fflush (stdout);
+
       error_check (tscpaq_dequeue (&(in->q_out), (void const *restrict *restrict) &buf_in)   != 0) {
          TODO (kill other thread);
          return NULL;
       }
-puts ("b"); fflush (stdout);
+
       error_check (tscpaq_dequeue (&(out->q_in), (void const *restrict *restrict) &buf_out)  != 0) {
          TODO (kill other thread);
          return NULL;
       }
-puts ("c"); fflush (stdout);
+
       TODO (something else)
 
       /*memcpy (buf_out->buf, buf_in->buf, min (buf_in->n, buf_out->n));*/
       memcpy (buf_out->buf, buf_in->buf, buf_in->n);
       buf_out->n = buf_in->n;
 
-puts ("d"); fflush (stdout);
+
       error_check (tscpaq_enqueue (&(out->q_out), buf_out) != 0) {
          TODO (kill other thread);
          return NULL;
       }
-puts ("e"); fflush (stdout);
+
       error_check (tscpaq_enqueue (&(in->q_in),   buf_in)  != 0) {
          TODO (kill other thread);
          return NULL;
       }
-puts ("f"); fflush (stdout);
+
    }
    return NULL;
 }
