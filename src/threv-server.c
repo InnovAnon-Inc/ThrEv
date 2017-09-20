@@ -7,6 +7,7 @@
 
 #include <stdio.h> /* for puts */
 #include <stdlib.h>
+#include <strings.h>
 #include <netinet/in.h>
 
 #include <glitter.h>
@@ -263,8 +264,9 @@ typedef struct {
    io_thread_cb_t in, out;
 } io_thread_cb2_t;
 
-__attribute__ ((nonnull (1, 2, 4), nothrow, warn_unused_result))
+__attribute__ ((nonnull (1, 2, 3, 5), nothrow, warn_unused_result))
 static int io_thread_cb_common (
+   size_t *restrict ret,
    tscpaq_t *restrict q_in,
    tscpaq_t *restrict q_out,
    size_t bufsz,
@@ -277,18 +279,21 @@ static int io_thread_cb_common (
          q_in, (void const *restrict *restrict) &buf) != 0)
          return -1;
       n = cb (fd, buf, bufsz);
-      if (n == 0) return /*0*/ -1;
+      if (n == 0) return 0 /*-1*/;
       error_check (n < 0) return -2;
-      TODO (keep track of amount read)
+      *ret = (size_t) n;
       error_check (tscpaq_enqueue (q_out, buf) != 0)
          return -3;
    /*}*/
    return 0;
 }
 
-__attribute__ ((nonnull (1), nothrow, warn_unused_result))
-static int io_thread_cb_rd (io_thread_cb_t *restrict arg_in) {
+__attribute__ ((nonnull (1, 2), nothrow, warn_unused_result))
+static int io_thread_cb_rd (
+   size_t *restrict ret,
+   io_thread_cb_t *restrict arg_in) {
    return io_thread_cb_common (
+      ret,
       &(arg_in->q_in), &(arg_in->q_out), arg_in->bufsz,
       r_read, STDIN_FILENO);
 #ifdef OTHER
@@ -310,10 +315,13 @@ static int io_thread_cb_rd (io_thread_cb_t *restrict arg_in) {
 #endif
 }
 
-__attribute__ ((nonnull (1), nothrow, warn_unused_result))
-static int io_thread_cb_wr (io_thread_cb_t *restrict arg_out) {
+__attribute__ ((nonnull (1, 2), nothrow, warn_unused_result))
+static int io_thread_cb_wr (
+   size_t *restrict ret,
+   io_thread_cb_t *restrict arg_out) {
    return io_thread_cb_common (
-      &(arg_out->q_out), &(arg_out->q_in), arg_out->bufsz,
+      ret,
+      &(arg_out->q_out), &(arg_out->q_in), /*arg_out->bufsz*/ *ret,
       r_write, STDOUT_FILENO);
 #ifdef OTHER
    char *restrict buf_out;
@@ -340,11 +348,15 @@ static void *io_thread_cb (void *_arg) {
    io_thread_cb2_t *restrict arg = (io_thread_cb2_t *restrict) _arg;
    io_thread_cb_t *restrict arg_in;
    io_thread_cb_t *restrict arg_out;
+   size_t tmp, sv;
    arg_in  = &(arg->in);
    arg_out = &(arg->out);
    while (true) {
-      error_check (io_thread_cb_rd ((void *) arg_in)  != 0) return NULL;
-      error_check (io_thread_cb_wr ((void *) arg_out) != 0) return NULL;
+      error_check (io_thread_cb_rd (&tmp, (void *) arg_in)  != 0) return NULL;
+      if (tmp == 0) return NULL;
+      sv = tmp;
+      error_check (io_thread_cb_wr (&tmp, (void *) arg_out) != 0) return NULL;
+      error_check (tmp != sv) return NULL;
    }
    return NULL;
 }
