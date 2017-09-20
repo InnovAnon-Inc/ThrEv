@@ -327,7 +327,7 @@ puts ("e00"); fflush (stdout);
 puts ("f0"); fflush (stdout);
       memcpy (buf_out, buf_in, min (args_in->bufsz, args_out->bufsz));
 puts ("g0"); fflush (stdout);
-      error_check (tscpaq_enqueue (&(args_out->q_in),  buf_out) != 0) break;
+      error_check (tscpaq_enqueue (&(args_out->q_out), buf_out) != 0) break;
 puts ("g00"); fflush (stdout);
       error_check (tscpaq_enqueue (&(args_in->q_in),   buf_in)  != 0) break;
 puts ("h0"); fflush (stdout);
