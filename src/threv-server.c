@@ -333,7 +333,7 @@ puts ("BC"); fflush (stdout);
 puts ("BD"); fflush (stdout);
    buf->n = (size_t) n;
 puts ("BE"); fflush (stdout);
-   if (n == 0) return /*0*/ -1
+   if (n == 0) return /*0*/ -1;
 puts ("BF"); fflush (stdout);
    error_check (tscpaq_enqueue (&(p->q_out), buf) != 0)
       return -3;
