@@ -229,7 +229,7 @@ static buffer_t *get_buf (
 __attribute__ ((nonnull (1), nothrow, warn_unused_result))
 static int init_io_thread_cb (
    io_thread_cb_t *restrict args, size_t bufsz, size_t nbuf) {
-   size_t mybufsz;
+   /*size_t mybufsz;*/
    size_t i;
    char *restrict bufs;
    args->bufsz = bufsz;
