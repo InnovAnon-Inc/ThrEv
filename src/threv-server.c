@@ -276,12 +276,16 @@ puts ("d1"); fflush (stdout);
 puts ("e1"); fflush (stdout);
    /* reader */
    error_check (tscpaq_dequeue (&(arg_in->q_in), (void const *restrict *restrict) &buf_in)    != 0) return NULL;
+puts ("e10"); fflush (stdout);
    error_check (r_read (STDIN_FILENO, buf_in, arg_in->bufsz) != 0) return NULL;
+puts ("e11"); fflush (stdout);
    error_check (tscpaq_enqueue (&(arg_in->q_out), buf_in)    != 0) return NULL;
 puts ("f1"); fflush (stdout);
    /* writer */
    error_check (tscpaq_dequeue (&(arg_out->q_out), (void const *restrict *restrict) &buf_out)      != 0) return NULL;
+puts ("f10"); fflush (stdout);
    error_check (r_write (STDOUT_FILENO, buf_out, arg_out->bufsz)  != 0) return NULL;
+puts ("f11"); fflush (stdout);
    error_check (tscpaq_enqueue (&(arg_out->q_in),   buf_out)      != 0) return NULL;
 puts ("g1"); fflush (stdout);
    return NULL;
@@ -315,12 +319,14 @@ puts ("d0"); fflush (stdout);
       char *restrict buf_out;
 puts ("e0"); fflush (stdout);
       error_check (tscpaq_dequeue (&(args_in->q_out), (void const *restrict *restrict) &buf_in)   != 0) break;
+puts ("e00"); fflush (stdout);
       error_check (tscpaq_dequeue (&(args_out->q_in), (void const *restrict *restrict) &buf_out)  != 0) break;
       TODO (something else)
 puts ("f0"); fflush (stdout);
       memcpy (buf_out, buf_in, min (args_in->bufsz, args_out->bufsz));
 puts ("g0"); fflush (stdout);
       error_check (tscpaq_enqueue (&(args_out->q_in),  buf_out) != 0) break;
+puts ("g00"); fflush (stdout);
       error_check (tscpaq_enqueue (&(args_in->q_in),   buf_in)  != 0) break;
 puts ("h0"); fflush (stdout);
    }
