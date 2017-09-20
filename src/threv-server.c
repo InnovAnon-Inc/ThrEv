@@ -498,19 +498,19 @@ puts ("f"); fflush (stdout);
 }
 
 int main (void) {
-   io_t dest, src;
+   io_t dest/*, src*/;
    size_t in_bufsz = 3;
    size_t in_nbuf  = 3;
    size_t out_bufsz = 3;
    size_t out_nbuf  = 3;
    pthread_t io_thread, worker_thread;
-   error_check (alloc_io (&dest, &src,
+   error_check (alloc_io (&dest, /*&src,*/
       in_bufsz, in_nbuf, out_bufsz, out_nbuf) != 0) return EXIT_FAILURE;
    pthread_create (&io_thread, NULL, io_thread_cb, &dest);
-   pthread_create (&worker_thread, NULL, worker_thread_cb, &src);
+   pthread_create (&worker_thread, NULL, worker_thread_cb, /*&src*/ &dest);
    pthread_join (io_thread, NULL);
    pthread_join (worker_thread, NULL);
-   error_check (free_io (&dest, &src) != 0) return EXIT_FAILURE;
+   error_check (free_io (&dest/*, &src*/) != 0) return EXIT_FAILURE;
 
    return EXIT_SUCCESS;
 }
