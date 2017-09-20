@@ -523,7 +523,7 @@ int main (void) {
       in_bufsz, in_nbuf, out_bufsz, out_nbuf) != 0) return EXIT_FAILURE;
 
    pthread_create (&io_thread, NULL, io_thread_cb, &dest);
-   pthread_create (&worker_thread, NULL, worker_thread_cb, / *&src* / &dest);
+   pthread_create (&worker_thread, NULL, worker_thread_cb, /*&src*/ &dest);
    pthread_join (io_thread, NULL);
    pthread_join (worker_thread, NULL);
 #ifdef TESTING
