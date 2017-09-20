@@ -311,10 +311,9 @@ puts ("c"); fflush (stdout);
    pthread_create (&io_thread, NULL, io_thread_cb, (void *) &args);
 puts ("d0"); fflush (stdout);
    while (true) {
-puts ("e0"); fflush (stdout);
       char const *restrict buf_in;
       char *restrict buf_out;
-
+puts ("e0"); fflush (stdout);
       error_check (tscpaq_dequeue (&(args_in->q_out), (void const *restrict *restrict) &buf_in)   != 0) break;
       error_check (tscpaq_dequeue (&(args_out->q_in), (void const *restrict *restrict) &buf_out)  != 0) break;
       TODO (something else)
