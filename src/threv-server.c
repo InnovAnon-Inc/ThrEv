@@ -278,9 +278,9 @@ typedef struct {
 } io_thread_cb2_t;
 
 typedef __attribute__ ((nonnull (2), /*nothrow,*/ warn_unused_result))
-ssize_t (*io_thread_cb_common_cb_t) (fd_t, void *, size_t);
+ssize_t (*io_thread_cb_common_cb_t) (fd_t, buffer_t *, size_t);
 
-__attribute__ ((nonnull (1), /*nothrow,*/))
+__attribute__ ((nonnull (2), /*nothrow,*/))
 static ssize_t read_wrapper (
    fd_t fd,
    buffer_t *restrict buf,
@@ -291,7 +291,7 @@ static ssize_t read_wrapper (
    return n;
 }
 
-__attribute__ ((nonnull (1), /*nothrow,*/))
+__attribute__ ((nonnull (2), /*nothrow,*/))
 static ssize_t write_wrapper (
    fd_t fd,
    buffer_t *restrict buf,
@@ -316,7 +316,7 @@ static int io_thread_cb_common (
       error_check (tscpaq_dequeue (
          q_in, (void const *restrict *restrict) &buf) != 0)
          return -1;
-      n = cb (fd, buf->buf, bufsz);
+      n = cb (fd, buf, bufsz);
       if (n == 0) return 0 /*-1*/;
       error_check (n < 0) return -2;
       error_check (tscpaq_enqueue (q_out, buf) != 0)
