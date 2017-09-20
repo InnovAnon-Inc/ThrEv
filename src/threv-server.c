@@ -14,6 +14,7 @@
 	#pragma GCC diagnostic push
 	#pragma GCC diagnostic ignored "-Wpadded"
 	#pragma GCC diagnostic ignored "-Wnested-externs"
+	#pragma GCC diagnostic ignored "-Wmissing-prototypes"
 #include <ev.h>
 	#pragma GCC diagnostic pop
 
