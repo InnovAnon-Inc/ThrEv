@@ -431,7 +431,7 @@ int main (void) {
       }
       TODO (something else)
 /*puts ("f0"); fflush (stdout);*/
-      memcpy (buf_out->buf, buf_in->buf, min (args_in->n, args_out->n));
+      memcpy (buf_out->buf, buf_in->buf, min (buf_in->n, buf_out->n));
 /*puts ("g0"); fflush (stdout);*/
       error_check (tscpaq_enqueue (&(args_out->q_out), buf_out) != 0) {
          TODO (kill other thread);
@@ -448,8 +448,8 @@ int main (void) {
 /*puts ("i0"); fflush (stdout);*/
 
    TODO (pthread join)
-   error_check (free_io_thread_cb (args_out) != 0) return EXIT_FAILURE;
-   error_check (free_io_thread_cb (args_in)  != 0) return EXIT_FAILURE;
+   error_check (free_pipe (args_out) != 0) return EXIT_FAILURE;
+   error_check (free_pipe (args_in)  != 0) return EXIT_FAILURE;
    return EXIT_SUCCESS;
    /*return EXIT_FAILURE;*/
 }
