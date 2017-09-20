@@ -264,13 +264,16 @@ typedef struct {
    io_thread_cb_t in, out;
 } io_thread_cb2_t;
 
+typedef __attribute__ ((nonnull (2), nothrow, warn_unused_result))
+ssize_t (*io_thread_cb_common_cb_t) (fd_t, void *, size_t);
+
 __attribute__ ((nonnull (1, 2, 3, 5), nothrow, warn_unused_result))
 static int io_thread_cb_common (
    size_t *restrict ret,
    tscpaq_t *restrict q_in,
    tscpaq_t *restrict q_out,
    size_t bufsz,
-   ssize_t (*cb) (fd_t, void *, size_t),
+   io_thread_cb_common_cb_t cb,
    fd_t fd) {
    char *restrict buf;
    ssize_t n;
@@ -384,26 +387,38 @@ int main (void) {
 /*puts ("c"); fflush (stdout);*/
    pthread_create (&io_thread, NULL, io_thread_cb, (void *) &args);
 /*puts ("d0"); fflush (stdout);*/
-   while (true) {
+   while (true) { /* while other thread is alive*/
       char const *restrict buf_in;
       char *restrict buf_out;
 /*puts ("e0"); fflush (stdout);*/
-      error_check (tscpaq_dequeue (&(args_in->q_out), (void const *restrict *restrict) &buf_in)   != 0) break;
+      error_check (tscpaq_dequeue (&(args_in->q_out), (void const *restrict *restrict) &buf_in)   != 0) {
+         TODO (kill other thread);
+         break;
+      }
 /*puts ("e00"); fflush (stdout);*/
-      error_check (tscpaq_dequeue (&(args_out->q_in), (void const *restrict *restrict) &buf_out)  != 0) break;
+      error_check (tscpaq_dequeue (&(args_out->q_in), (void const *restrict *restrict) &buf_out)  != 0) {
+         TODO (kill other thread);
+         break;
+      }
       TODO (something else)
 /*puts ("f0"); fflush (stdout);*/
       memcpy (buf_out, buf_in, min (args_in->bufsz, args_out->bufsz));
 /*puts ("g0"); fflush (stdout);*/
-      error_check (tscpaq_enqueue (&(args_out->q_out), buf_out) != 0) break;
+      error_check (tscpaq_enqueue (&(args_out->q_out), buf_out) != 0) {
+         TODO (kill other thread);
+         break;
+      }
 /*puts ("g00"); fflush (stdout);*/
-      error_check (tscpaq_enqueue (&(args_in->q_in),   buf_in)  != 0) break;
+      error_check (tscpaq_enqueue (&(args_in->q_in),   buf_in)  != 0) {
+         TODO (kill other thread);
+         break;
+      }
 /*puts ("h0"); fflush (stdout);*/
    }
    /*__builtin_unreachable ();*/
 /*puts ("i0"); fflush (stdout);*/
 
-   TODO (pthread kill/join)
+   TODO (pthread join)
    error_check (free_io_thread_cb (args_out) != 0) return EXIT_FAILURE;
    error_check (free_io_thread_cb (args_in)  != 0) return EXIT_FAILURE;
    return EXIT_SUCCESS;
