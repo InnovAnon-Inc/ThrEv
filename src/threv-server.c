@@ -209,93 +209,103 @@ typedef struct {
    size_t n;
    char *restrict buf;
 } buffer_t;
+	#pragma GCC diagnostic pop
+
+__attribute__ ((nonnull (1, 2), nothrow))
+static void init_buffer (
+   buffer_t *restrict buffer,
+   char *restrict buf) {
+   /*buffer->n = 0;*/
+   buffer->buf = buf;
+}
+
+__attribute__ ((nonnull (1), nothrow, warn_unused_result))
+static int alloc_buffer (
+   buffer_t *restrict buffer,
+   size_t bufsz) {
+   char *restrict buf = malloc (bufsz);
+   error_check (buf == NULL) return -1;
+   init_buffer (buffer, buf);
+   return 0;
+}
+
+__attribute__ ((nonnull (1), nothrow))
+static void free_buffer (buffer_t *restrict buffer) {
+   free (buffer->buf);
+}
+
+
+
+	#pragma GCC diagnostic push
+	#pragma GCC diagnostic ignored "-Wpadded"
 typedef struct {
    size_t bufsz, nbuf;
    tscpaq_t q_in, q_out;
    buffer_t *restrict bufs;
-} io_thread_cb_t;
+} pipe_t;
 	#pragma GCC diagnostic pop
 
-/*
-__attribute__ ((const, nonnull (1), nothrow, returns_nonnull, warn_unused_result))
-static buffer_t *get_buf (
-   buffer_t *restrict bufs,
-   size_t i, size_t bufsz) {
-   size_t mybufsz = sizeof (buffer_t) + sizeof (char) * bufsz;
-   return (buffer_t *restrict) ((char *restrict) bufs + (i * mybufsz));
-}
-*/
+__attribute__ ((nonnull (1, 4), nothrow, warn_unused_result))
+static int init_pipe (
+   pipe_t *restrict p,
+   size_t bufsz, size_t nbuf,
+   buffer_t *restrict bufs) {
+   p->bufsz = bufsz;
+   p->nbuf  = nbuf;
+   p->bufs  = bufs;
 
-__attribute__ ((nonnull (1), nothrow, warn_unused_result))
-static int init_io_thread_cb (
-   io_thread_cb_t *restrict args, size_t bufsz, size_t nbuf) {
-   /*size_t mybufsz;*/
-   size_t i;
-   char *restrict bufs;
-   args->bufsz = bufsz;
-   args->nbuf  = nbuf;
-
-   bufs = (char *restrict) malloc (args->nbuf * args->bufsz);
-   error_check (bufs == NULL) return -1;
-   args->bufs = (buffer_t *restrict) malloc (args->nbuf * sizeof (buffer_t));
-   error_check (args->bufs == NULL) return -2;
-
-   for (i = 0; i != args->nbuf; i++) {
-      printf ("i:%d\n", (int) i); fflush (stdout);
-      args->bufs[i].buf = bufs + i * args->bufsz;
-
-#ifdef WTF
-      memset (get_buf (args->bufs, i, bufsz), 0, mybufsz);
-
-      get_buf (args->bufs, i, bufsz)->buf =
-      /*(char *restrict) (get_buf (args->bufs, i, bufsz) + sizeof (buffer_t));*/
-      /*(char *restrict) (get_buf (args->bufs, i, bufsz) + 1);*/
-      (char *restrict) get_buf (args->bufs, i, bufsz) + sizeof (buffer_t);
-
-      memset (get_buf (args->bufs, i, bufsz)->buf, 0, sizeof (char) * args->bufsz);
-#endif
-   }
-
-   error_check (tscpaq_alloc_queue (&(args->q_in), args->nbuf + 1) != 0) {
-      free (args->bufs);
+   error_check (tscpaq_alloc_queue (&(p->q_in), nbuf + 1) != 0)
       return -2;
-   }
-
-   error_check (tscpaq_alloc_queue (&(args->q_out), args->nbuf + 1) != 0) {
+   error_check (tscpaq_alloc_queue (&(p->q_out), nbuf + 1) != 0) {
 	#pragma GCC diagnostic push
 	#pragma GCC diagnostic ignored "-Wunused-result"
-      (void) tscpaq_free_queue (&(args->q_in));
+      (void) tscpaq_free_queue (&(p->q_in));
 	#pragma GCC diagnostic pop
-      free (args->bufs);
       return -3;
    }
 
    for (i = 0; i != nbuf; i++)
-#ifdef WTF
-      error_check (tscpaq_enqueue (
-         &(args->q_in),
-         get_buf (args->bufs, i, bufsz)) != 0)
-         return -4;
-#else
          error_check (tscpaq_enqueue (
-         &(args->q_in),
-         args->bufs[i].buf) != 0)
+         &(p->q_in),
+         p->bufs[i].buf) != 0)
          return -4;
-#endif
 
    return 0;
 }
 
 __attribute__ ((nonnull (1), nothrow, warn_unused_result))
-static int free_io_thread_cb (io_thread_cb_t *restrict arg) {
-   error_check (tscpaq_free_queue (&(arg->q_out)) != 0) return -1;
-   error_check (tscpaq_free_queue (&(arg->q_in))  != 0) return -2;
-   free (arg->bufs);
+static int alloc_pipe (
+   pipe_t *restrict p,
+   size_t bufsz, size_t nbuf) {
+   size_t i;
+   buffer_t *restrict bufs = malloc (nbuf * sizeof (buffer_t));
+   error_check (bufs == NULL) return -1;
+   error_check (init_pipe (p, bufsz, nbuf, bufs) != 0) return -2;
+   for (i = 0; i != nbuf; i++)
+      error_check (alloc_buffer (bufs + i, bufsz) != 0) {
+         TODO (free 0:i-1)
+         return -3;
+      }
    return 0;
 }
 
+__attribute__ ((nonnull (1), nothrow))
+static void free_pipe (pipe_t *restrict p) {
+   size_t i;
+   tscpaq_free (&(p->q_in));
+   tscpaq_free (&(p->q_out));
+   for (i = 0; i != p->nbuf; i++)
+      free_buffer (p->bufs + i);
+   free (p->bufs);
+}
+
+
+
+
+
+
 typedef struct {
-   io_thread_cb_t in, out;
+   pipe_t in, out;
 } io_thread_cb2_t;
 
 typedef __attribute__ ((nonnull (2), /*nothrow,*/ warn_unused_result))
@@ -348,7 +358,7 @@ static int io_thread_cb_common (
 
 __attribute__ ((nonnull (1), nothrow, warn_unused_result))
 static int io_thread_cb_rd (
-   io_thread_cb_t *restrict arg_in) {
+   pipe_t *restrict arg_in) {
    return io_thread_cb_common (
       &(arg_in->q_in), &(arg_in->q_out), arg_in->bufsz,
       read_wrapper, STDIN_FILENO);
@@ -356,7 +366,7 @@ static int io_thread_cb_rd (
 
 __attribute__ ((nonnull (1), nothrow, warn_unused_result))
 static int io_thread_cb_wr (
-   io_thread_cb_t *restrict arg_out) {
+   pipe_t *restrict arg_out) {
    return io_thread_cb_common (
       &(arg_out->q_out), &(arg_out->q_in), arg_out->bufsz /* *ret*/,
       write_wrapper, STDOUT_FILENO);
@@ -365,8 +375,8 @@ static int io_thread_cb_wr (
 __attribute__ ((nonnull (1), nothrow, warn_unused_result))
 static void *io_thread_cb (void *_arg) {
    io_thread_cb2_t *restrict arg = (io_thread_cb2_t *restrict) _arg;
-   io_thread_cb_t *restrict arg_in;
-   io_thread_cb_t *restrict arg_out;
+   pipe_t *restrict arg_in;
+   pipe_t *restrict arg_out;
    arg_in  = &(arg->in);
    arg_out = &(arg->out);
    while (true) {
@@ -387,8 +397,8 @@ int main (void) {
    size_t nbuf  = 3;
    char *restrict bufs;
    tscpaq_t q_in, q_out;*/
-   io_thread_cb_t *restrict args_in;
-   io_thread_cb_t *restrict args_out;
+   pipe_t *restrict args_in;
+   pipe_t *restrict args_out;
    io_thread_cb2_t args;
    pthread_t io_thread;
 /*puts ("a"); fflush (stdout);*/
@@ -401,8 +411,8 @@ int main (void) {
    pthread_create (&io_thread, NULL, io_thread_cb, (void *) &args);
 /*puts ("d0"); fflush (stdout);*/
    while (true) { /* while other thread is alive*/
-      char const *restrict buf_in;
-      char *restrict buf_out;
+      buffer_t const *restrict buf_in;
+      buffer_t *restrict buf_out;
 /*puts ("e0"); fflush (stdout);*/
       error_check (tscpaq_dequeue (&(args_in->q_out), (void const *restrict *restrict) &buf_in)   != 0) {
          TODO (kill other thread);
@@ -415,7 +425,7 @@ int main (void) {
       }
       TODO (something else)
 /*puts ("f0"); fflush (stdout);*/
-      memcpy (buf_out, buf_in, min (args_in->bufsz, args_out->bufsz));
+      memcpy (buf_out->buf, buf_in->buf, min (args_in->n, args_out->n));
 /*puts ("g0"); fflush (stdout);*/
       error_check (tscpaq_enqueue (&(args_out->q_out), buf_out) != 0) {
          TODO (kill other thread);
