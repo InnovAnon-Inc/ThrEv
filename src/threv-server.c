@@ -3,6 +3,7 @@
 #endif
 
 #define _POSIX_C_SOURCE 200112L
+#define __STDC_VERSION__ 200112L
 
 #include <stdio.h> /* for puts */
 #include <stdlib.h>
