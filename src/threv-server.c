@@ -202,6 +202,7 @@ int main (void) {
         enqueue data
  */
 
+
 	#pragma GCC diagnostic push
 	#pragma GCC diagnostic ignored "-Wpadded"
 typedef struct {
@@ -228,15 +229,20 @@ static int init_io_thread_cb (
    io_thread_cb_t *restrict args, size_t bufsz, size_t nbuf) {
    size_t mybufsz;
    size_t i;
+   char *restrict bufs;
    args->bufsz = bufsz;
    args->nbuf  = nbuf;
-   mybufsz = sizeof (buffer_t) + sizeof (char) * args->bufsz;
 
-   args->bufs = (buffer_t *restrict) malloc (args->nbuf * mybufsz);
-   error_check (args->bufs == NULL) return -1;
+   bufs = (char *restrict) malloc (args->nbuf * args->bufsz);
+   error_check (bufs == NULL) return -1;
+   args->bufs = (buffer_t *restrict) malloc (args->nbuf * sizeof (buffer_t));
+   error_check (args->bufs == NULL) return -2;
 
    for (i = 0; i != args->nbuf; i++) {
       printf ("i:%d\n", (int) i); fflush (stdout);
+      args->bufs[i].buf = bufs + i * args->bufsz;
+
+#ifdef 0
       memset (get_buf (args->bufs, i, bufsz), 0, mybufsz);
 
       get_buf (args->bufs, i, bufsz)->buf =
@@ -245,6 +251,7 @@ static int init_io_thread_cb (
       (char *restrict) get_buf (args->bufs, i, bufsz) + sizeof (buffer_t);
 
       memset (get_buf (args->bufs, i, bufsz)->buf, 0, sizeof (char) * args->bufsz);
+#endif
    }
 
    error_check (tscpaq_alloc_queue (&(args->q_in), args->nbuf + 1) != 0) {
@@ -262,10 +269,17 @@ static int init_io_thread_cb (
    }
 
    for (i = 0; i != nbuf; i++)
+#ifdef 0
       error_check (tscpaq_enqueue (
          &(args->q_in),
          get_buf (args->bufs, i, bufsz)) != 0)
          return -4;
+#else
+         error_check (tscpaq_enqueue (
+         &(args->q_in),
+         args->bufs[i].buf) != 0)
+         return -4;
+#endif
 
    return 0;
 }
