@@ -274,22 +274,24 @@ puts ("d1"); fflush (stdout);
    arg_in  = &(arg->in);
    arg_out = &(arg->out);
 puts ("e1"); fflush (stdout);
-   /* reader */
-   error_check (tscpaq_dequeue (&(arg_in->q_in), (void const *restrict *restrict) &buf_in)    != 0) return NULL;
+   while (true) {
+      /* reader */
+      error_check (tscpaq_dequeue (&(arg_in->q_in), (void const *restrict *restrict) &buf_in)    != 0) return NULL;
 puts ("e10"); fflush (stdout);
-   TODO (fix error check)
-   error_check (r_read (STDIN_FILENO, buf_in, arg_in->bufsz) < 0) return NULL;
+      TODO (fix error check)
+      error_check (r_read (STDIN_FILENO, buf_in, arg_in->bufsz) < 0) return NULL;
 puts ("e11"); fflush (stdout);
-   error_check (tscpaq_enqueue (&(arg_in->q_out), buf_in)    != 0) return NULL;
+      error_check (tscpaq_enqueue (&(arg_in->q_out), buf_in)    != 0) return NULL;
 puts ("f1"); fflush (stdout);
-   /* writer */
-   error_check (tscpaq_dequeue (&(arg_out->q_out), (void const *restrict *restrict) &buf_out)      != 0) return NULL;
+      /* writer */
+      error_check (tscpaq_dequeue (&(arg_out->q_out), (void const *restrict *restrict) &buf_out)      != 0) return NULL;
 puts ("f10"); fflush (stdout);
-   TODO (fix error check)
-   error_check (r_write (STDOUT_FILENO, buf_out, arg_out->bufsz)  < 0) return NULL;
+      TODO (fix error check)
+      error_check (r_write (STDOUT_FILENO, buf_out, arg_out->bufsz)  < 0) return NULL;
 puts ("f11"); fflush (stdout);
-   error_check (tscpaq_enqueue (&(arg_out->q_in),   buf_out)      != 0) return NULL;
+      error_check (tscpaq_enqueue (&(arg_out->q_in),   buf_out)      != 0) return NULL;
 puts ("g1"); fflush (stdout);
+   }
    return NULL;
 }
 
