@@ -458,8 +458,10 @@ static void *worker_thread_cb (void *_arg) {
    io_t *restrict arg = (io_t *restrict) _arg;
    pipe_t *restrict in;
    pipe_t *restrict out;
-   in  = arg->in;
-   out = arg->out;
+   /*in  = arg->in;
+   out = arg->out;*/
+   in  = arg->out;
+   out = arg->in;
    while (true) {
       buffer_t const *restrict buf_in;
       buffer_t *restrict buf_out;
