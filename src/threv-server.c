@@ -236,8 +236,8 @@ static int init_io_thread_cb (
    error_check (args->bufs == NULL) return -1;
 
    for (i = 0; i != args->nbuf; i++)
-      get_buf (&(args->bufs), i, bufsz)->buf =
-      get_buf (&(args->bufs), i, bufsz) + sizeof (buffer_t)
+      get_buf (args->bufs, i, bufsz)->buf =
+      get_buf (args->bufs, i, bufsz) + sizeof (buffer_t)
 
    error_check (tscpaq_alloc_queue (&(args->q_in), args->nbuf) != 0) {
       free (args->bufs);
