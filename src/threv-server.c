@@ -504,6 +504,8 @@ int main (void) {
    size_t out_bufsz = 3;
    size_t out_nbuf  = 3;
    pthread_t io_thread, worker_thread;
+   buffer_t *restrict buf_in;
+   buffer_t *restrict buf_out;
    error_check (alloc_io (&dest, /*&src,*/
       in_bufsz, in_nbuf, out_bufsz, out_nbuf) != 0) return EXIT_FAILURE;
    /*
