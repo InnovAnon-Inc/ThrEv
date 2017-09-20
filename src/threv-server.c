@@ -223,9 +223,13 @@ __attribute__ ((nonnull (1), nothrow, warn_unused_result))
 static int alloc_buffer (
    buffer_t *restrict buffer,
    size_t bufsz) {
+   size_t i;
    char *restrict buf = malloc (bufsz);
    error_check (buf == NULL) return -1;
    init_buffer (buffer, buf);
+
+   for (i = 0; i != bufsz; i++) buf[i] = '\0';
+
    return 0;
 }
 
