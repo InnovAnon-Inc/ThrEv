@@ -234,11 +234,12 @@ static int init_io_thread_cb (
    return 0;
 }
 
-__attribute__ ((nonnull (1), nothrow))
-static void free_io_thread_cb (io_thread_cb_t *restrict arg) {
-   tscpaq_free_queue (&(arg->q_out));
-   tscpaq_free_queue (&(arg->q_in));
+__attribute__ ((nonnull (1), nothrow, warn_unused_result))
+static int free_io_thread_cb (io_thread_cb_t *restrict arg) {
+   error_check (tscpaq_free_queue (&(arg->q_out)) != 0) return -1;
+   error_check (tscpaq_free_queue (&(arg->q_in))  != 0) return -2;
    free (arg->bufs);
+   return 0;
 }
 
 typedef struct {
@@ -311,9 +312,9 @@ int main (void) {
    /*__builtin_unreachable ();*/
 
    TODO (pthread kill/join)
-   free_io_thread_cb (args_out);
-   free_io_thread_cb (args_in);
-   /*return EXIT_SUCCESS;*/
-   return EXIT_FAILURE;
+   error_check (free_io_thread_cb (args_out) != 0) return EXIT_FAILURE;
+   error_check (free_io_thread_cb (args_in)  != 0) return EXIT_FAILURE;
+   return EXIT_SUCCESS;
+   /*return EXIT_FAILURE;*/
 }
 
