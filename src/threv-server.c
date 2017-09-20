@@ -240,6 +240,7 @@ static int init_io_thread_cb (
       get_buf (args->bufs, i, bufsz)->buf =
       /*(char *restrict) (get_buf (args->bufs, i, bufsz) + sizeof (buffer_t));*/
       (char *restrict) (get_buf (args->bufs, i, bufsz) + 1);
+      (buffer_t *) ((char *restrict) get_buf (args->bufs, i, bufsz) + sizeof (buffer_t));
    }
 
    error_check (tscpaq_alloc_queue (&(args->q_in), args->nbuf + 1) != 0) {
@@ -297,9 +298,7 @@ static ssize_t write_wrapper (
    buffer_t *restrict buf,
    size_t bufsz) {
    ssize_t n;
-   char *tmpbuf = buf->buf;
-   size_t tmpn = buf->n;
-   n = r_write (fd, tmpbuf, tmpn);
+   n = r_write (fd, buf->buf, buf->n);
    error_check (n <= 0) return -1;
    buf->n = (size_t) n;
    return n;
@@ -338,30 +337,9 @@ static int io_thread_cb_rd (
 __attribute__ ((nonnull (1), nothrow, warn_unused_result))
 static int io_thread_cb_wr (
    io_thread_cb_t *restrict arg_out) {
-#ifndef OTHER
    return io_thread_cb_common (
       &(arg_out->q_out), &(arg_out->q_in), arg_out->bufsz /* *ret*/,
       write_wrapper, STDOUT_FILENO);
-#else
-   tscpaq_t *restrict q_in,
-   tscpaq_t *restrict q_out,
-   buffer_t *restrict buf;
-   ssize_t n;
-   q_in  = &(arg_out->q_out);
-   q_out = &(arg_out->q_in);
-   /*while (true) {*/
-      error_check (tscpaq_dequeue (
-         q_in, (void const *restrict *restrict) &buf) != 0)
-         return -1;
-      n = r_write (STDOUT_FILENO, buf->buf, buf->n);
-      if (n == 0) return 0 /*-1*/;
-      error_check (n < 0) return -2;
-      buf->n = (size_t) n;
-      error_check (tscpaq_enqueue (q_out, buf) != 0)
-         return -3;
-   /*}*/
-   return 0;
-#endif
 }
 
 __attribute__ ((nonnull (1), nothrow, warn_unused_result))
