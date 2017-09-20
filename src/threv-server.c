@@ -373,22 +373,22 @@ typedef struct {
    pipe_t *restrict out;
 } io_t;
 
-__attribute__ ((nonnull (1, 2, 3, 4), nothrow))
+__attribute__ ((nonnull (1, 2, 3/*, 4*/), nothrow))
 static void init_io (
    io_t *restrict io_in,
-   io_t *restrict io_out,
+   /*io_t *restrict io_out,*/
    pipe_t *restrict in,
    pipe_t *restrict out) {
    io_in->in  = in;
    io_in->out = out;
-   io_out->in  = out;
-   io_out->out = in;
+   /*io_out->in  = out;
+   io_out->out = in;*/
 }
 
-__attribute__ ((nonnull (1, 2), nothrow, warn_unused_result))
+__attribute__ ((nonnull (1/*, 2*/), nothrow, warn_unused_result))
 static int alloc_io (
    io_t *restrict dest,
-   io_t *restrict src,
+   /*io_t *restrict src,*/
    size_t in_bufsz,  size_t in_nbuf,
    size_t out_bufsz, size_t out_nbuf) {
    pipe_t *restrict in;
@@ -402,7 +402,7 @@ static int alloc_io (
       return -2;
    }
 
-   init_io (dest, src, in, out);
+   init_io (dest, /*src,*/ in, out);
 
    error_check (alloc_pipe (in, in_bufsz, in_nbuf) != 0) {
       free (out);
@@ -422,8 +422,8 @@ static int alloc_io (
    return 0;
 }
 
-__attribute__ ((nonnull (1, 2), nothrow, warn_unused_result))
-static int free_io (io_t *restrict dest, io_t *restrict src) {
+__attribute__ ((nonnull (1/*, 2*/), nothrow, warn_unused_result))
+static int free_io (io_t *restrict dest/*, io_t *restrict src*/) {
    error_check (free_pipe (dest->in) != 0) return -1;
    error_check (free_pipe (dest->out) != 0) return -2;
    free (dest->in);
