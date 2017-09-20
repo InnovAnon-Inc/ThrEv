@@ -307,10 +307,12 @@ int main (void) {
       char const *restrict buf_in;
       char *restrict buf_out;
 
-      error_check (tscpaq_dequeue (&(args_in->q_out), (void const *restrict *restrict) &buf_in)  != 0) break;
+      error_check (tscpaq_dequeue (&(args_in->q_out), (void const *restrict *restrict) &buf_in)   != 0) break;
+      error_check (tscpaq_dequeue (&(args_out->q_in), (void const *restrict *restrict) &buf_out)  != 0) break;
       TODO (something else)
       memcpy (buf_out, buf_in, min (args_in->bufsz, args_out->bufsz));
       error_check (tscpaq_enqueue (&(args_out->q_in),  buf_out) != 0) break;
+      error_check (tscpaq_enqueue (&(args_in->q_in),   buf_in)  != 0) break;
    }
    /*__builtin_unreachable ();*/
 
