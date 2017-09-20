@@ -270,7 +270,7 @@ static void *io_thread_cb (void *_arg) {
 }
 
 __attribute__ ((const, nonnull (1), nothrow, returns_nonnull, warn_unused_result))
-static char *restrict get_buf (
+static char const *get_buf (
    char const bufs[],
    size_t i, size_t bufsz, size_t nbuf) {
    return bufs + i * bufsz
