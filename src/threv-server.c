@@ -214,6 +214,7 @@ typedef struct {
 __attribute__ ((nonnull (1), nothrow, warn_unused_result))
 static int init_io_thread_cb (
    io_thread_cb_t *restrict args, size_t bufsz, size_t nbuf) {
+   size_t i;
    args->bufsz = bufsz;
    args->nbuf  = nbuf;
 
@@ -233,6 +234,10 @@ static int init_io_thread_cb (
       free (args->bufs);
       return -3;
    }
+
+   for (i = 0; i != nbuf; i++)
+      error_check (tscpaq_enqueue (&(args->q_in, get_buf (args->bufs, i, bufsz, nbuf))) != 0)
+         return -4;
 
    return 0;
 }
