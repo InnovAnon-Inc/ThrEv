@@ -327,7 +327,7 @@ static int read_pipe (pipe_t *restrict p) {
       return -1;
    n = r_read (STDIN_FILENO, buf->buf, p->bufsz);
    error_check (n < 0) return -2;
-   buf->n = n;
+   buf->n = (size_t) n;
    if (n == 0) return /*0*/ -1;
    error_check (tscpaq_enqueue (&(p->q_out), buf) != 0)
       return -3;
