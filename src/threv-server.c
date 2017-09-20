@@ -454,6 +454,40 @@ puts ("C"); fflush (stdout);
    return NULL;
 }
 
+
+
+
+
+
+
+
+
+
+__attribute__ ((nonnull (1), nothrow, warn_unused_result))
+static int read_pipe2 (pipe_t *restrict p) {
+   buffer_t *restrict buf;
+   ssize_t n;
+puts ("BA"); fflush (stdout);
+   error_check (tscpaq_dequeue (
+      &(p->q_in), (void const *restrict *restrict) &buf) != 0)
+      return -1;
+puts ("BB"); fflush (stdout);
+
+puts ("BC"); fflush (stdout);
+   error_check (n < 0) return -2;
+puts ("BD"); fflush (stdout);
+   buf->buf[(size_t) n] = '\0';
+   buf->n = (size_t) n + 1;
+puts ("BE"); fflush (stdout);
+   if (n == 0) return /*0*/ -1;
+puts ("BF"); fflush (stdout);
+   error_check (tscpaq_enqueue (&(p->q_out), buf) != 0)
+      return -3;
+puts ("BG"); fflush (stdout);
+   return 0;
+}
+
+
 __attribute__ ((nonnull (1), nothrow, warn_unused_result))
 static void *worker_thread_cb (void *_arg) {
    io_t *restrict arg = (io_t *restrict) _arg;
