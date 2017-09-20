@@ -8,7 +8,10 @@
 #include <stdlib.h>
 #include <netinet/in.h>
 
+	#pragma GCC diagnostic push
+	#pragma GCC diagnostic ignored "-Wpadded"
 #include <ev.h>
+	#pragma GCC diagnostic pop
 
 #include <glitter.h>
 /*#include <restart.h>*/
