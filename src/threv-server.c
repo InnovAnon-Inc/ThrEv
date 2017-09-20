@@ -202,6 +202,13 @@ int main (void) {
  */
 
 
+__attribute__ ((const, nonnull (1), nothrow, returns_nonnull, warn_unused_result))
+static char const *get_buf (
+   char const bufs[],
+   size_t i, size_t bufsz, size_t nbuf) {
+   return bufs + i * bufsz;
+}
+
 	#pragma GCC diagnostic push
 	#pragma GCC diagnostic ignored "-Wpadded"
 typedef struct {
@@ -276,13 +283,6 @@ static void *io_thread_cb (void *_arg) {
    error_check (tscpaq_enqueue (&(arg_out->q_in),   buf_out)      != 0) return NULL;
 
    return NULL;
-}
-
-__attribute__ ((const, nonnull (1), nothrow, returns_nonnull, warn_unused_result))
-static char const *get_buf (
-   char const bufs[],
-   size_t i, size_t bufsz, size_t nbuf) {
-   return bufs + i * bufsz;
 }
 
 #ifndef min
