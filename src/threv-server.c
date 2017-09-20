@@ -242,7 +242,7 @@ static int init_io_thread_cb (
       (char *restrict) (get_buf (args->bufs, i, bufsz) + 1);
    }
 
-   error_check (tscpaq_alloc_queue (&(args->q_in), args->nbuf) != 0) {
+   error_check (tscpaq_alloc_queue (&(args->q_in), args->nbuf + 1) != 0) {
       free (args->bufs);
       return -2;
    }
