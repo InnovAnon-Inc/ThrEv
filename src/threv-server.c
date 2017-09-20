@@ -290,8 +290,8 @@ int main (void) {
    args_in  = &(args.in);
    args_out = &(args.out);
 
-   error_check (init_io_thread_cb (args_in,  512, 3) != 0) return EXIT_FAILURE;
-   error_check (init_io_thread_cb (args_out, 512, 3) != 0) return EXIT_FAILURE;
+   error_check (init_io_thread_cb (args_in,  (size_t) 512, (size_t) 3) != 0) return EXIT_FAILURE;
+   error_check (init_io_thread_cb (args_out, (size_t) 512, (size_t) 3) != 0) return EXIT_FAILURE;
 
    pthread_create (&io_thread, NULL, io_thread_cb, (void *) args);
 
