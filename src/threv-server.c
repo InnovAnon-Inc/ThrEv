@@ -342,7 +342,8 @@ static ssize_t read_wrapper (
    ssize_t n = r_read (fd, buf->buf, bufsz - 1);
    error_check (n < 0) return -1;
    buf->buf[n] = '\0';
-   printf ("buf:%s\n", buf->buf); fflush (stdout);
+   printf ("rd buf:%s\n", buf->buf); fflush (stdout);
+   printf ("rd buf->n:%d\n", (int) n); fflush (stdout);
    buf->n = (size_t) n + 1;
    return n;
 }
@@ -353,7 +354,8 @@ static ssize_t write_wrapper (
    buffer_t *restrict buf,
    size_t bufsz) {
    ssize_t n;
-   printf ("buf->n:%d\n", (int) (buf->n)); fflush (stdout);
+   printf ("wr buf->n:%d\n", (int) (buf->n)); fflush (stdout);
+   printf ("wr buf:%s\n", buf->buf); fflush (stdout);
    n = r_write (fd, buf->buf, buf->n);
    error_check (n <= 0) return -1;
    buf->n = (size_t) n;
