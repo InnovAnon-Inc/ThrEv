@@ -256,7 +256,7 @@ static int init_io_thread_cb (
    for (i = 0; i != nbuf - 1; i++)
       error_check (tscpaq_enqueue (
          &(args->q_in),
-         get_buf (args->bufs, i, bufsz, nbuf)) != 0)
+         get_buf (args->bufs, i, bufsz)) != 0)
          return -4;
 
    return 0;
