@@ -247,7 +247,7 @@ static int init_io_thread_cb (
       return -2;
    }
 
-   error_check (tscpaq_alloc_queue (&(args->q_out), args->nbuf) != 0) {
+   error_check (tscpaq_alloc_queue (&(args->q_out), args->nbuf + 1) != 0) {
 	#pragma GCC diagnostic push
 	#pragma GCC diagnostic ignored "-Wunused-result"
       (void) tscpaq_free_queue (&(args->q_in));
@@ -256,7 +256,7 @@ static int init_io_thread_cb (
       return -3;
    }
 
-   for (i = 0; i != nbuf - 1; i++)
+   for (i = 0; i != nbuf; i++)
       error_check (tscpaq_enqueue (
          &(args->q_in),
          get_buf (args->bufs, i, bufsz)) != 0)
