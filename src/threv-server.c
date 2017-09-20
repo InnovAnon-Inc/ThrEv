@@ -517,7 +517,7 @@ int main (void) {
 
    tscpaq_dequeue (&(dest.in->q_out), (void const *restrict *restrict) &buf_in);
 puts ("b"); fflush (stdout);
-      error_check (tscpaq_dequeue (&(dest.out->q_in), (void const *restrict *restrict) &buf_out)  != 0);
+   tscpaq_dequeue (&(dest.out->q_in), (void const *restrict *restrict) &buf_out);
 puts ("c"); fflush (stdout);
       TODO (something else)
 
@@ -525,15 +525,9 @@ puts ("c"); fflush (stdout);
       memcpy (buf_out->buf, buf_in->buf, buf_in->n);
 
 puts ("d"); fflush (stdout);
-      error_check (tscpaq_enqueue (&(dest.out->q_out), buf_out) != 0) {
-         TODO (kill other thread);
-         return NULL;
-      }
+      tscpaq_enqueue (&(dest.out->q_out), buf_out);
 puts ("e"); fflush (stdout);
-      error_check (tscpaq_enqueue (&(dest.in->q_in),   buf_in)  != 0) {
-         TODO (kill other thread);
-         return NULL;
-      }
+      tscpaq_enqueue (&(dest.in->q_in),   buf_in);
 
 
 
