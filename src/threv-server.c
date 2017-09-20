@@ -217,10 +217,10 @@ typedef struct {
 
 __attribute__ ((const, nonnull (1), nothrow, returns_nonnull, warn_unused_result))
 static buffer_t *get_buf (
-   buffer_t *bufs,
+   buffer_t *restrict bufs,
    size_t i, size_t bufsz) {
    size_t mybufsz = sizeof (buffer_t) + sizeof (char) * bufsz;
-   return (buffer_t) ((char *) bufs + (i * mybufsz));
+   return (buffer_t *restrict) ((char *restrict) bufs + (i * mybufsz));
 }
 
 __attribute__ ((nonnull (1), nothrow, warn_unused_result))
