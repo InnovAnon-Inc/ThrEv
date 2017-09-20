@@ -237,10 +237,14 @@ static int init_io_thread_cb (
 
    for (i = 0; i != args->nbuf; i++) {
       printf ("i:%d\n", (int) i); fflush (stdout);
+      memset (get_buf (args->bufs, i, bufsz), 0, mybufsz);
+
       get_buf (args->bufs, i, bufsz)->buf =
       /*(char *restrict) (get_buf (args->bufs, i, bufsz) + sizeof (buffer_t));*/
       /*(char *restrict) (get_buf (args->bufs, i, bufsz) + 1);*/
       (char *restrict) get_buf (args->bufs, i, bufsz) + sizeof (buffer_t);
+
+      memset (get_buf (args->bufs, i, bufsz)->buf, 0, sizeof (char) * args->bufsz);
    }
 
    error_check (tscpaq_alloc_queue (&(args->q_in), args->nbuf + 1) != 0) {
