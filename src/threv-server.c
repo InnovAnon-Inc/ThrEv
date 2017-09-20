@@ -263,34 +263,45 @@ typedef struct {
    io_thread_cb_t in, out;
 } io_thread_cb2_t;
 
+__attribute__ ((nonnull (1), nothrow))
+static void *io_thread_cb_rd (void *_arg) {
+   io_thread_cb_t *restrict arg_in = (io_thread_cb_t *restrict) _arg;
+   char *restrict buf_in;
+   /*while (true) {*/
+      /* reader */
+      error_check (tscpaq_dequeue (&(arg_in->q_in), (void const *restrict *restrict) &buf_in)    != 0) return NULL;
+      TODO (fix error check)
+      TODO (keep track of amount read)
+      error_check (r_read (STDIN_FILENO, buf_in, arg_in->bufsz) <= 0) return NULL;
+      error_check (tscpaq_enqueue (&(arg_in->q_out), buf_in)    != 0) return NULL;
+   /*}*/
+   return NULL;
+}
+
+__attribute__ ((nonnull (1), nothrow))
+static void *io_thread_cb_wr (void *_arg) {
+   io_thread_cb_t *restrict arg_out = (io_thread_cb_t *restrict) _arg;
+   char *restrict buf_out;
+   /*while (true) {*/
+      /* writer */
+      error_check (tscpaq_dequeue (&(arg_out->q_out), (void const *restrict *restrict) &buf_out)      != 0) return NULL;
+      TODO (fix error check)
+      error_check (r_write (STDOUT_FILENO, buf_out, arg_out->bufsz)  <= 0) return NULL;
+      error_check (tscpaq_enqueue (&(arg_out->q_in),   buf_out)      != 0) return NULL;
+   /*}*/
+   return NULL;
+}
+
 __attribute__ ((nonnull (1), nothrow, warn_unused_result))
 static void *io_thread_cb (void *_arg) {
    io_thread_cb2_t *restrict arg = (io_thread_cb2_t *restrict) _arg;
    io_thread_cb_t *restrict arg_in;
    io_thread_cb_t *restrict arg_out;
-   char *restrict buf_in;
-   char *restrict buf_out;
-/*puts ("d1"); fflush (stdout);*/
    arg_in  = &(arg->in);
    arg_out = &(arg->out);
-/*puts ("e1"); fflush (stdout);*/
    while (true) {
-      /* reader */
-      error_check (tscpaq_dequeue (&(arg_in->q_in), (void const *restrict *restrict) &buf_in)    != 0) return NULL;
-/*puts ("e10"); fflush (stdout);*/
-      TODO (fix error check)
-      error_check (r_read (STDIN_FILENO, buf_in, arg_in->bufsz) <= 0) return NULL;
-/*puts ("e11"); fflush (stdout);*/
-      error_check (tscpaq_enqueue (&(arg_in->q_out), buf_in)    != 0) return NULL;
-/*puts ("f1"); fflush (stdout);*/
-      /* writer */
-      error_check (tscpaq_dequeue (&(arg_out->q_out), (void const *restrict *restrict) &buf_out)      != 0) return NULL;
-/*puts ("f10"); fflush (stdout);*/
-      TODO (fix error check)
-      error_check (r_write (STDOUT_FILENO, buf_out, arg_out->bufsz)  <= 0) return NULL;
-/*puts ("f11"); fflush (stdout);*/
-      error_check (tscpaq_enqueue (&(arg_out->q_in),   buf_out)      != 0) return NULL;
-/*puts ("g1"); fflush (stdout);*/
+      (void) io_thread_cb_rd ((void *) arg_in);
+      (void) io_thread_cb_wr ((void *) arg_out);
    }
    return NULL;
 }
