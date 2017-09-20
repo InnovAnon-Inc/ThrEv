@@ -373,7 +373,6 @@ static void *io_thread_cb (void *_arg) {
       error_check (io_thread_cb_rd ((void *) arg_in)  != 0) return NULL;
       if (arg_in == 0) return NULL;
       error_check (io_thread_cb_wr ((void *) arg_out) != 0) return NULL;
-      error_check (tmp != tmp2) return NULL;
    }
    return NULL;
 }
