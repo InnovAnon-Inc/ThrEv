@@ -11,7 +11,6 @@
 
 	#pragma GCC diagnostic push
 	#pragma GCC diagnostic ignored "-Wpadded"
-#define __STDC_VERSION__ 200112L
 #include <ev.h>
 	#pragma GCC diagnostic pop
 
