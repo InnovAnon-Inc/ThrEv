@@ -297,7 +297,9 @@ static ssize_t write_wrapper (
    buffer_t *restrict buf,
    size_t bufsz) {
    ssize_t n;
-   n = r_write (fd, buf->buf, buf->n);
+   char *tmpbuf = buf->buf;
+   size_t tmpn = buf->n;
+   n = r_write (fd, tmpbuf, tmpn);
    error_check (n <= 0) return -1;
    buf->n = (size_t) n;
    return n;
