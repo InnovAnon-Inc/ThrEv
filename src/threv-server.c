@@ -295,11 +295,11 @@ static int alloc_pipe (
    return 0;
 }
 
-__attribute__ ((nonnull (1), nothrow))
-static void free_pipe (pipe_t *restrict p) {
+__attribute__ ((nonnull (1), nothrow, warn_unused_result))
+static int free_pipe (pipe_t *restrict p) {
    size_t i;
-   tscpaq_free_queue (&(p->q_in));
-   tscpaq_free_queue (&(p->q_out));
+   error_check (tscpaq_free_queue (&(p->q_in)) != 0) return -1;
+   error_check (tscpaq_free_queue (&(p->q_out)) != 0) return -2;
    for (i = 0; i != p->nbuf; i++)
       free_buffer (p->bufs + i);
    free (p->bufs);
