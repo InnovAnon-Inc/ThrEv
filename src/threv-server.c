@@ -429,9 +429,12 @@ static void *io_thread_cb (void *_arg) {
    in  = arg->in;
    out = arg->out;
    while (true) {
+puts ("A"); fflush (stdout);
       error_check (read_pipe (in)  != 0) return NULL;
+puts ("B"); fflush (stdout);
       /*if (arg_in == 0) return NULL;*/
       error_check (write_pipe (out) != 0) return NULL;
+puts ("C"); fflush (stdout);
    }
    return NULL;
 }
