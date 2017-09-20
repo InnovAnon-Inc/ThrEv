@@ -511,8 +511,10 @@ int main (void) {
    pthread_create (&worker_thread, NULL, worker_thread_cb, / *&src* / &dest);
    pthread_join (io_thread, NULL);
    pthread_join (worker_thread, NULL);*/
-
-   worker_thread_cb (&dest);
+	#pragma GCC diagnostic push
+	#pragma GCC diagnostic ignored "-Wunused-result"
+   (void) worker_thread_cb (&dest);
+   #pragma GCC diagnostic pop
 
    error_check (free_io (&dest/*, &src*/) != 0) return EXIT_FAILURE;
 
