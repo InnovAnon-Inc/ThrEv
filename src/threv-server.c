@@ -493,9 +493,12 @@ static void *worker_thread_cb (void *_arg) {
 
       TODO (something else)
 
+      if (buf_in->n == 0)
+         return NULL;
+
       memcpy (buf_out->buf, buf_in->buf, min (buf_in->n, out->bufsz));
       /*memcpy (buf_out->buf, buf_in->buf, buf_in->n);*/
-      buf_out->n = buf_in->n = min (buf_in->n, out->bufsz);
+      buf_out->n = min (buf_in->n, out->bufsz);
 
 
       error_check (tscpaq_enqueue (&(out->q_out), buf_out) != 0) {
