@@ -461,7 +461,9 @@ static void *io_thread_cb (void *_arg) {
 
 
 
-
+#ifndef min
+#define min(A, B) ((A) < (B) ? (A) : (B))
+#endif
 
 
 
@@ -491,9 +493,9 @@ static void *worker_thread_cb (void *_arg) {
 
       TODO (something else)
 
-      /*memcpy (buf_out->buf, buf_in->buf, min (buf_in->n, buf_out->n));*/
-      memcpy (buf_out->buf, buf_in->buf, buf_in->n);
-      buf_out->n = buf_in->n;
+      memcpy (buf_out->buf, buf_in->buf, min (buf_in->n, out->bufsz));
+      /*memcpy (buf_out->buf, buf_in->buf, buf_in->n);*/
+      buf_out->n = buf_in->n = min (buf_in->n, out->bufsz);
 
 
       error_check (tscpaq_enqueue (&(out->q_out), buf_out) != 0) {
@@ -545,8 +547,8 @@ puts ("b"); fflush (stdout);
 puts ("c"); fflush (stdout);
       TODO (something else)
 
-      /*memcpy (buf_out->buf, buf_in->buf, min (buf_in->n, buf_out->n));*/
-      memcpy (buf_out->buf, buf_in->buf, buf_in->n);
+      memcpy (buf_out->buf, buf_in->buf, min (buf_in->n, buf_out->n));
+      /*memcpy (buf_out->buf, buf_in->buf, buf_in->n);*/
       buf_out->n = buf_in->n;
 
 puts ("d"); fflush (stdout);
@@ -681,9 +683,7 @@ static void *io_thread_cb (void *_arg) {
    return NULL;
 }
 
-#ifndef min
-#define min(A, B) ((A) < (B) ? (A) : (B))
-#endif
+
 
 __attribute__ ((nothrow))
 int main (void) {
