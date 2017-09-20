@@ -226,7 +226,10 @@ static int init_io_thread_cb (
    }
 
    error_check (tscpaq_alloc_queue (&(args->q_out), args->nbuf) != 0) {
-      tscpaq_free_queue (&(args->q_in));
+	#pragma GCC diagnostic push
+	#pragma GCC diagnostic ignored "-Wunused-result"
+      (void) tscpaq_free_queue (&(args->q_in));
+	#pragma GCC diagnostic pop
       free (args->bufs);
       return -3;
    }
