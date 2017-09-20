@@ -317,7 +317,7 @@ static int io_thread_cb_common (
          q_in, (void const *restrict *restrict) &buf) != 0)
          return -1;
       n = cb (fd, buf, bufsz);
-      if (n == 0) return 0 /*-1*/;
+      if (n == 0) return /*0*/ -1;
       error_check (n < 0) return -2;
       error_check (tscpaq_enqueue (q_out, buf) != 0)
          return -3;
