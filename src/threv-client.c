@@ -106,7 +106,7 @@ socket_wr_cb (EV_P_ ev_io *w_, int revents) {
 
 
 
-int ezudpcb (socket_t s, struct sockaddr_in *si_other, void *unused) {
+static int ezudpcb (socket_t s, struct sockaddr_in *si_other, void *unused) {
    struct ev_loop *loop = EV_DEFAULT;
    socket_wr_watcher_t wr_watcher;
 
