@@ -220,7 +220,7 @@ static buffer_t *get_buf (
    buffer_t *bufs,
    size_t i, size_t bufsz) {
    size_t mybufsz = sizeof (buffer_t) + sizeof (char) * bufsz;
-   return bufs + (i * mybufsz);
+   return (buffer_t) ((char *) bufs + (i * mybufsz));
 }
 
 __attribute__ ((nonnull (1), nothrow, warn_unused_result))
