@@ -228,6 +228,7 @@ static int alloc_buffer (
    error_check (buf == NULL) return -1;
    init_buffer (buffer, buf);
 
+   TODO (delete this)
    for (i = 0; i != bufsz; i++) buf[i] = '\0';
 
    return 0;
@@ -262,7 +263,7 @@ static int init_pipe (
    for (i = 0; i != nbuf; i++)
          error_check (tscpaq_enqueue (
          &(p->q_in),
-         p->bufs + i) != 0)
+         bufs + i) != 0)
          return -4;
 
    return 0;
@@ -290,7 +291,9 @@ static int alloc_pipe (
 	#pragma GCC diagnostic pop
       return -3;
    }
-   error_check (init_pipe (p, bufsz, nbuf, bufs) != 0) return -2;
+
+   /*error_check (init_pipe (p, bufsz, nbuf, bufs) != 0) return -2;*/
+
    for (i = 0; i != nbuf; i++)
       error_check (alloc_buffer (bufs + i, bufsz) != 0) {
          size_t j;
@@ -303,6 +306,9 @@ static int alloc_pipe (
 	#pragma GCC diagnostic pop
          return -4;
       }
+
+   error_check (init_pipe (p, bufsz, nbuf, bufs) != 0) return -2;
+
    return 0;
 }
 
