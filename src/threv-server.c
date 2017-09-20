@@ -2,6 +2,8 @@
 #include <config.h>
 #endif
 
+#define _POSIX_C_SOURCE 200112L
+
 #include <stdio.h> /* for puts */
 #include <stdlib.h>
 #include <netinet/in.h>
