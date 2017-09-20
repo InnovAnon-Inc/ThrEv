@@ -343,7 +343,7 @@ static int write_pipe (pipe_t *restrict p) {
       return -1;
    n = r_write (STDOUT_FILENO, buf->buf, buf->n);
    error_check (n < 0) return -2;
-   buf->n = n;
+   buf->n = (size_t) n;
    if (n == 0) return /*0*/ -1;
    error_check (tscpaq_enqueue (&(p->q_in), buf) != 0)
       return -3;
@@ -426,8 +426,8 @@ static void *io_thread_cb (void *_arg) {
    io_t *restrict arg = (io_t *restrict) _arg;
    pipe_t *restrict in;
    pipe_t *restrict out;
-   in  = &(arg->in);
-   out = &(arg->out);
+   in  = arg->in;
+   out = arg->out;
    while (true) {
       error_check (read_pipe (in)  != 0) return NULL;
       /*if (arg_in == 0) return NULL;*/
@@ -441,17 +441,17 @@ static void *worker_thread_cb (void *_arg) {
    io_t *restrict arg = (io_t *restrict) _arg;
    pipe_t *restrict in;
    pipe_t *restrict out;
-   in  = &(arg->in);
-   out = &(arg->out);
+   in  = arg->in;
+   out = arg->out;
    while (true) {
       buffer_t const *restrict buf_in;
       buffer_t *restrict buf_out;
 
-      error_check (tscpaq_dequeue (&(in->out), (void const *restrict *restrict) &buf_in)   != 0) {
+      error_check (tscpaq_dequeue (&(in->q_out), (void const *restrict *restrict) &buf_in)   != 0) {
          TODO (kill other thread);
          return NULL;
       }
-      error_check (tscpaq_dequeue (&(out->in), (void const *restrict *restrict) &buf_out)  != 0) {
+      error_check (tscpaq_dequeue (&(out->q_in), (void const *restrict *restrict) &buf_out)  != 0) {
          TODO (kill other thread);
          return NULL;
       }
@@ -460,11 +460,11 @@ static void *worker_thread_cb (void *_arg) {
       /*memcpy (buf_out->buf, buf_in->buf, min (buf_in->n, buf_out->n));*/
       memcpy (buf_out->buf, buf_in->buf, buf_in->n);
 
-      error_check (tscpaq_enqueue (&(out->out), buf_out) != 0) {
+      error_check (tscpaq_enqueue (&(out->q_out), buf_out) != 0) {
          TODO (kill other thread);
          return NULL;
       }
-      error_check (tscpaq_enqueue (&(in->in),   buf_in)  != 0) {
+      error_check (tscpaq_enqueue (&(in->q_in),   buf_in)  != 0) {
          TODO (kill other thread);
          return NULL;
       }
