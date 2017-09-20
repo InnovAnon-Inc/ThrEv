@@ -411,8 +411,8 @@ int main (void) {
    args_in  = &(args.in);
    args_out = &(args.out);
 /*puts ("b"); fflush (stdout);*/
-   error_check (init_io_thread_cb (args_in,  (size_t)   3, (size_t) 3) != 0) return EXIT_FAILURE;
-   error_check (init_io_thread_cb (args_out, (size_t)   3, (size_t) 3) != 0) return EXIT_FAILURE;
+   error_check (alloc_pipe (args_in,  (size_t)   3, (size_t) 3) != 0) return EXIT_FAILURE;
+   error_check (alloc_pipe (args_out, (size_t)   3, (size_t) 3) != 0) return EXIT_FAILURE;
 /*puts ("c"); fflush (stdout);*/
    pthread_create (&io_thread, NULL, io_thread_cb, (void *) &args);
 /*puts ("d0"); fflush (stdout);*/
