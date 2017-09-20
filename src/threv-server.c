@@ -18,7 +18,7 @@
 #include <ev.h>
 	#pragma GCC diagnostic pop
 
-/*#include <restart.h>*/
+#include <restart.h>
 #include <tscpaq.h>
 
 #include <ezudp-server.h>
