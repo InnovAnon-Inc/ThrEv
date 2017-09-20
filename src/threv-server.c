@@ -202,32 +202,42 @@ int main (void) {
         enqueue data
  */
 
-
-__attribute__ ((const, nonnull (1), nothrow, returns_nonnull, warn_unused_result))
-static char const *get_buf (
-   char const bufs[],
-   size_t i, size_t bufsz, size_t nbuf) {
-   return bufs + i * bufsz;
-}
-
 	#pragma GCC diagnostic push
 	#pragma GCC diagnostic ignored "-Wpadded"
 typedef struct {
+   size_t n;
+   char *restrict buf;
+} buffer_t;
+typedef struct {
    size_t bufsz, nbuf;
    tscpaq_t q_in, q_out;
-   char *restrict bufs;
+   buffer_t *restrict bufs;
 } io_thread_cb_t;
 	#pragma GCC diagnostic pop
+
+__attribute__ ((const, nonnull (1), nothrow, returns_nonnull, warn_unused_result))
+static buffer_t *get_buf (
+   buffer_t bufs[],
+   size_t i, size_t bufsz) {
+   size_t mybufsz = sizeof (buffer_t) + bufsz;
+   return bufs + (i * mybufsz);
+}
 
 __attribute__ ((nonnull (1), nothrow, warn_unused_result))
 static int init_io_thread_cb (
    io_thread_cb_t *restrict args, size_t bufsz, size_t nbuf) {
+   size_t mybufsz;
    size_t i;
    args->bufsz = bufsz;
    args->nbuf  = nbuf;
+   mybufsz = sizeof (buffer_t) + args->bufsz;
 
-   args->bufs = (char *restrict) malloc (args->nbuf * args->bufsz);
+   args->bufs = (buffer_t *restrict) malloc (args->nbuf * mybufsz);
    error_check (args->bufs == NULL) return -1;
+
+   for (i = 0; i != args->nbuf; i++)
+      get_buf (&(args->bufs), i, bufsz)->buf =
+      get_buf (&(args->bufs), i, bufsz) + sizeof (buffer_t)
 
    error_check (tscpaq_alloc_queue (&(args->q_in), args->nbuf) != 0) {
       free (args->bufs);
