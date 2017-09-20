@@ -9,6 +9,8 @@
 #include <stdlib.h>
 #include <netinet/in.h>
 
+#include <glitter.h>
+
 	#pragma GCC diagnostic push
 	#pragma GCC diagnostic ignored "-Wpadded"
 #include <ev.h>
