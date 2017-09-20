@@ -216,6 +216,7 @@ typedef struct {
 } io_thread_cb_t;
 	#pragma GCC diagnostic pop
 
+/*
 __attribute__ ((const, nonnull (1), nothrow, returns_nonnull, warn_unused_result))
 static buffer_t *get_buf (
    buffer_t *restrict bufs,
@@ -223,6 +224,7 @@ static buffer_t *get_buf (
    size_t mybufsz = sizeof (buffer_t) + sizeof (char) * bufsz;
    return (buffer_t *restrict) ((char *restrict) bufs + (i * mybufsz));
 }
+*/
 
 __attribute__ ((nonnull (1), nothrow, warn_unused_result))
 static int init_io_thread_cb (
