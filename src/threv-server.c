@@ -299,23 +299,6 @@ static int io_thread_cb_rd (
       ret,
       &(arg_in->q_in), &(arg_in->q_out), arg_in->bufsz,
       r_read, STDIN_FILENO);
-#ifdef OTHER
-   char *restrict buf_in;
-   ssize_t rd;
-   /*while (true) {*/
-      /* reader */
-      error_check (tscpaq_dequeue (
-         &(arg_in->q_in), (void const *restrict *restrict) &buf_in) != 0)
-         return -1;
-      rd = r_read (STDIN_FILENO, buf_in, arg_in->bufsz);
-      if (rd == 0) return /*0*/ -1;
-      error_check (rd < 0) return -2;
-      TODO (keep track of amount read)
-      error_check (tscpaq_enqueue (&(arg_in->q_out), buf_in) != 0)
-         return -3;
-   /*}*/
-   return 0;
-#endif
 }
 
 __attribute__ ((nonnull (1, 2), nothrow, warn_unused_result))
@@ -326,24 +309,6 @@ static int io_thread_cb_wr (
       ret,
       &(arg_out->q_out), &(arg_out->q_in), /*arg_out->bufsz*/ *ret,
       r_write, STDOUT_FILENO);
-#ifdef OTHER
-   char *restrict buf_out;
-   ssize_t wr;
-   /*while (true) {*/
-      /* writer */
-      error_check (tscpaq_dequeue (
-         &(arg_out->q_out), (void const *restrict *restrict) &buf_out) != 0)
-         return -1;
-      wr = r_write (STDOUT_FILENO, buf_out, arg_out->bufsz);
-      if (wr == 0) return -4;
-      error_check (wr < 0) return -2;
-      TODO (compare wr against amount read)
-      error_check (wr != arg_out->bufsz) return -5;
-      error_check (tscpaq_enqueue (&(arg_out->q_in),   buf_out) != 0)
-         return -3;
-   /*}*/
-   return 0;
-#endif
 }
 
 __attribute__ ((nonnull (1), nothrow, warn_unused_result))
@@ -351,15 +316,14 @@ static void *io_thread_cb (void *_arg) {
    io_thread_cb2_t *restrict arg = (io_thread_cb2_t *restrict) _arg;
    io_thread_cb_t *restrict arg_in;
    io_thread_cb_t *restrict arg_out;
-   size_t tmp, sv;
+   size_t tmp, tmp2;
    arg_in  = &(arg->in);
    arg_out = &(arg->out);
    while (true) {
       error_check (io_thread_cb_rd (&tmp, (void *) arg_in)  != 0) return NULL;
       if (tmp == 0) return NULL;
-      sv = tmp;
-      error_check (io_thread_cb_wr (&tmp, (void *) arg_out) != 0) return NULL;
-      error_check (tmp != sv) return NULL;
+      error_check (io_thread_cb_wr (&tmp2, (void *) arg_out) != 0) return NULL;
+      error_check (tmp != tmp2) return NULL;
    }
    return NULL;
 }
