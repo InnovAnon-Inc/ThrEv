@@ -322,15 +322,22 @@ __attribute__ ((nonnull (1), nothrow, warn_unused_result))
 static int read_pipe (pipe_t *restrict p) {
    buffer_t *restrict buf;
    ssize_t n;
+puts ("BA"); fflush (stdout);
    error_check (tscpaq_dequeue (
       &(p->q_in), (void const *restrict *restrict) &buf) != 0)
       return -1;
+puts ("BB"); fflush (stdout);
    n = r_read (STDIN_FILENO, buf->buf, p->bufsz);
+puts ("BC"); fflush (stdout);
    error_check (n < 0) return -2;
+puts ("BD"); fflush (stdout);
    buf->n = (size_t) n;
+puts ("BE"); fflush (stdout);
    if (n == 0) return /*0*/ -1;
+puts ("BF"); fflush (stdout);
    error_check (tscpaq_enqueue (&(p->q_out), buf) != 0)
       return -3;
+puts ("BG"); fflush (stdout);
    return 0;
 }
 
@@ -338,15 +345,22 @@ __attribute__ ((nonnull (1), nothrow, warn_unused_result))
 static int write_pipe (pipe_t *restrict p) {
    buffer_t *restrict buf;
    ssize_t n;
+puts ("CA"); fflush (stdout);
    error_check (tscpaq_dequeue (
       &(p->q_out), (void const *restrict *restrict) &buf) != 0)
       return -1;
+puts ("CB"); fflush (stdout);
    n = r_write (STDOUT_FILENO, buf->buf, buf->n);
+puts ("CC"); fflush (stdout);
    error_check (n < 0) return -2;
+puts ("CD"); fflush (stdout);
    buf->n = (size_t) n;
+puts ("CE"); fflush (stdout);
    if (n == 0) return /*0*/ -1;
+puts ("CF"); fflush (stdout);
    error_check (tscpaq_enqueue (&(p->q_in), buf) != 0)
       return -3;
+puts ("CG"); fflush (stdout);
    return 0;
 }
 
