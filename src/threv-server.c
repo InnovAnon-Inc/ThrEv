@@ -293,7 +293,7 @@ int main (void) {
    error_check (init_io_thread_cb (args_in,  (size_t) 512, (size_t) 3) != 0) return EXIT_FAILURE;
    error_check (init_io_thread_cb (args_out, (size_t) 512, (size_t) 3) != 0) return EXIT_FAILURE;
 
-   pthread_create (&io_thread, NULL, io_thread_cb, (void *) args);
+   pthread_create (&io_thread, NULL, io_thread_cb, (void *) &args);
 
    while (true) {
       char const *restrict buf_in;
