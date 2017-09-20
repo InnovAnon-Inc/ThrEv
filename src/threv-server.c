@@ -235,10 +235,12 @@ static int init_io_thread_cb (
    args->bufs = (buffer_t *restrict) malloc (args->nbuf * mybufsz);
    error_check (args->bufs == NULL) return -1;
 
-   for (i = 0; i != args->nbuf; i++)
+   for (i = 0; i != args->nbuf; i++) {
+      printf ("i:%d\n", (int) i); fflush (stdout);
       get_buf (args->bufs, i, bufsz)->buf =
       /*(char *restrict) (get_buf (args->bufs, i, bufsz) + sizeof (buffer_t));*/
       (char *restrict) (get_buf (args->bufs, i, bufsz) + 1);
+   }
 
    error_check (tscpaq_alloc_queue (&(args->q_in), args->nbuf) != 0) {
       free (args->bufs);
