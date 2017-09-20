@@ -440,23 +440,24 @@ int main (void) {
 
       error_check (tscpaq_dequeue (&(args_in->q_out), (void const *restrict *restrict) &buf_in)   != 0) {
          TODO (kill other thread);
-         break;
+         /*break;*/return EXIT_FAILURE;
       }
       error_check (tscpaq_dequeue (&(args_out->q_in), (void const *restrict *restrict) &buf_out)  != 0) {
          TODO (kill other thread);
-         break;
+         /*break;*/return EXIT_FAILURE;
       }
       TODO (something else)
 
-      memcpy (buf_out->buf, buf_in->buf, min (buf_in->n, buf_out->n));
+      /*memcpy (buf_out->buf, buf_in->buf, min (buf_in->n, buf_out->n));*/
+      memcpy (buf_out->buf, buf_in->buf, buf_in->n);
 
       error_check (tscpaq_enqueue (&(args_out->q_out), buf_out) != 0) {
          TODO (kill other thread);
-         break;
+         /*break;*/return EXIT_FAILURE;
       }
       error_check (tscpaq_enqueue (&(args_in->q_in),   buf_in)  != 0) {
          TODO (kill other thread);
-         break;
+         /*break;*/return EXIT_FAILURE;
       }
    }
    /*__builtin_unreachable ();*/
