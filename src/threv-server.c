@@ -217,9 +217,9 @@ typedef struct {
 
 __attribute__ ((const, nonnull (1), nothrow, returns_nonnull, warn_unused_result))
 static buffer_t *get_buf (
-   buffer_t bufs[],
+   buffer_t *bufs,
    size_t i, size_t bufsz) {
-   size_t mybufsz = sizeof (buffer_t) + bufsz;
+   size_t mybufsz = sizeof (buffer_t) + sizeof (char) * bufsz;
    return bufs + (i * mybufsz);
 }
 
@@ -230,7 +230,7 @@ static int init_io_thread_cb (
    size_t i;
    args->bufsz = bufsz;
    args->nbuf  = nbuf;
-   mybufsz = sizeof (buffer_t) + args->bufsz;
+   mybufsz = sizeof (buffer_t) + sizeof (char) * args->bufsz;
 
    args->bufs = (buffer_t *restrict) malloc (args->nbuf * mybufsz);
    error_check (args->bufs == NULL) return -1;
