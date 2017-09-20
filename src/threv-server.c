@@ -285,13 +285,13 @@ static int io_thread_cb_common (
    size_t bufsz,
    io_thread_cb_common_cb_t cb,
    fd_t fd) {
-   char *restrict buf;
+   buffer_t *restrict buf;
    ssize_t n;
    /*while (true) {*/
       error_check (tscpaq_dequeue (
          q_in, (void const *restrict *restrict) &buf) != 0)
          return -1;
-      n = cb (fd, buf, bufsz);
+      n = cb (fd, buf->buf, bufsz);
       if (n == 0) return 0 /*-1*/;
       error_check (n < 0) return -2;
       *ret = (size_t) n;
