@@ -201,12 +201,14 @@ int main (void) {
  */
 
 
-
+	#pragma GCC diagnostic push
+	#pragma GCC diagnostic ignored "-Wpadded"
 typedef struct {
    size_t bufsz, nbuf;
    tscpaq_t q_in, q_out
    char *restrict bufs;
 } io_thread_cb_t;
+	#pragma GCC diagnostic pop
 
 __attribute__ ((nonnull (1), nothrow, warn_unused_result))
 static int init_io_thread_cb (

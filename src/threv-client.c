@@ -23,18 +23,23 @@
 
 
 
-
+	#pragma GCC diagnostic push
+	#pragma GCC diagnostic ignored "-Wpadded"
 typedef struct {
    ev_io io;
    socket_t s;
 } socket_rd_watcher_t;
+	#pragma GCC diagnostic pop
 
+	#pragma GCC diagnostic push
+	#pragma GCC diagnostic ignored "-Wpadded"
 typedef struct {
    ev_io io;
    struct ev_loop *loop;
    socket_t s;
    struct sockaddr_in *si_other;
 } socket_wr_watcher_t;
+	#pragma GCC diagnostic pop
 
 
 
