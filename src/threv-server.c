@@ -258,7 +258,7 @@ static int init_pipe (
    for (i = 0; i != nbuf; i++)
          error_check (tscpaq_enqueue (
          &(p->q_in),
-         p->bufs[i].buf) != 0)
+         p->bufs + i) != 0)
          return -4;
 
    return 0;
@@ -289,8 +289,15 @@ static int alloc_pipe (
    error_check (init_pipe (p, bufsz, nbuf, bufs) != 0) return -2;
    for (i = 0; i != nbuf; i++)
       error_check (alloc_buffer (bufs + i, bufsz) != 0) {
-         TODO (free 0:i-1)
-         return -3;
+         size_t j;
+         for (j = 0; j != i; j++) free_buffer (bufs + j);
+         free (bufs);
+	#pragma GCC diagnostic push
+	#pragma GCC diagnostic ignored "-Wunused-result"
+         (void) tscpaq_free_queue (&(p->q_out));
+         (void) tscpaq_free_queue (&(p->q_in));
+	#pragma GCC diagnostic pop
+         return -4;
       }
    return 0;
 }
@@ -387,7 +394,7 @@ static void *io_thread_cb (void *_arg) {
    arg_out = &(arg->out);
    while (true) {
       error_check (io_thread_cb_rd ((void *) arg_in)  != 0) return NULL;
-      if (arg_in == 0) return NULL;
+      /*if (arg_in == 0) return NULL;*/
       error_check (io_thread_cb_wr ((void *) arg_out) != 0) return NULL;
    }
    return NULL;
@@ -399,53 +406,45 @@ static void *io_thread_cb (void *_arg) {
 
 __attribute__ ((nothrow))
 int main (void) {
-   /*size_t bufsz = 512 * sizeof (char);
-   size_t nbuf  = 3;
-   char *restrict bufs;
-   tscpaq_t q_in, q_out;*/
    pipe_t *restrict args_in;
    pipe_t *restrict args_out;
    io_thread_cb2_t args;
    pthread_t io_thread;
-/*puts ("a"); fflush (stdout);*/
+
    args_in  = &(args.in);
    args_out = &(args.out);
-/*puts ("b"); fflush (stdout);*/
+
    error_check (alloc_pipe (args_in,  (size_t)   3, (size_t) 3) != 0) return EXIT_FAILURE;
    error_check (alloc_pipe (args_out, (size_t)   3, (size_t) 3) != 0) return EXIT_FAILURE;
-/*puts ("c"); fflush (stdout);*/
+
    pthread_create (&io_thread, NULL, io_thread_cb, (void *) &args);
-/*puts ("d0"); fflush (stdout);*/
+
    while (true) { /* while other thread is alive*/
       buffer_t const *restrict buf_in;
       buffer_t *restrict buf_out;
-/*puts ("e0"); fflush (stdout);*/
+
       error_check (tscpaq_dequeue (&(args_in->q_out), (void const *restrict *restrict) &buf_in)   != 0) {
          TODO (kill other thread);
          break;
       }
-/*puts ("e00"); fflush (stdout);*/
       error_check (tscpaq_dequeue (&(args_out->q_in), (void const *restrict *restrict) &buf_out)  != 0) {
          TODO (kill other thread);
          break;
       }
       TODO (something else)
-/*puts ("f0"); fflush (stdout);*/
+
       memcpy (buf_out->buf, buf_in->buf, min (buf_in->n, buf_out->n));
-/*puts ("g0"); fflush (stdout);*/
+
       error_check (tscpaq_enqueue (&(args_out->q_out), buf_out) != 0) {
          TODO (kill other thread);
          break;
       }
-/*puts ("g00"); fflush (stdout);*/
       error_check (tscpaq_enqueue (&(args_in->q_in),   buf_in)  != 0) {
          TODO (kill other thread);
          break;
       }
-/*puts ("h0"); fflush (stdout);*/
    }
    /*__builtin_unreachable ();*/
-/*puts ("i0"); fflush (stdout);*/
 
    TODO (pthread join)
    error_check (free_pipe (args_out) != 0) return EXIT_FAILURE;
