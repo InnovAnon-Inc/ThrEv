@@ -512,7 +512,7 @@ int main (void) {
    pthread_join (io_thread, NULL);
    pthread_join (worker_thread, NULL);*/
 
-   worker_thread_cb (&dest);
+   worker_thread_cb (&dest)
 
    error_check (free_io (&dest/*, &src*/) != 0) return EXIT_FAILURE;
 
