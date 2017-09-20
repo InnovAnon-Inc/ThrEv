@@ -513,7 +513,35 @@ int main (void) {
    pthread_join (worker_thread, NULL);*/
 	#pragma GCC diagnostic push
 	#pragma GCC diagnostic ignored "-Wunused-result"
-   (void) io_thread_cb (&dest);
+   read_pipe (&(dest.in));
+
+   tscpaq_dequeue (&(dest.in->q_out), (void const *restrict *restrict) &buf_in);
+puts ("b"); fflush (stdout);
+      error_check (tscpaq_dequeue (&(dest.out->q_in), (void const *restrict *restrict) &buf_out)  != 0);
+puts ("c"); fflush (stdout);
+      TODO (something else)
+
+      /*memcpy (buf_out->buf, buf_in->buf, min (buf_in->n, buf_out->n));*/
+      memcpy (buf_out->buf, buf_in->buf, buf_in->n);
+
+puts ("d"); fflush (stdout);
+      error_check (tscpaq_enqueue (&(dest.out->q_out), buf_out) != 0) {
+         TODO (kill other thread);
+         return NULL;
+      }
+puts ("e"); fflush (stdout);
+      error_check (tscpaq_enqueue (&(dest.in->q_in),   buf_in)  != 0) {
+         TODO (kill other thread);
+         return NULL;
+      }
+
+
+
+
+
+
+   write_pipe (&(dest.out));
+   /*(void) io_thread_cb (&dest);*/
    /*(void) worker_thread_cb (&dest);*/
    #pragma GCC diagnostic pop
 
