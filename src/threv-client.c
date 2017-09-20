@@ -122,7 +122,10 @@ int ezudpcb (socket_t s, struct sockaddr_in *si_other, void *unused) {
 }
 
 int main (void) {
+	#pragma GCC diagnostic push
+	#pragma GCC diagnostic ignored "-Wtraditional-conversion"
    const int err = ezudp_client ((uint16_t) 1234, "127.0.0.1" /*"localhost"*/, ezudpcb, NULL);
+	#pragma GCC diagnostic pop
    if (err != 0) {
       fprintf (stderr, "err:%d\n", err);
       return EXIT_FAILURE;
