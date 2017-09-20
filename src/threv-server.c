@@ -264,7 +264,7 @@ typedef struct {
    io_thread_cb_t in, out;
 } io_thread_cb2_t;
 
-typedef __attribute__ ((nonnull (2), nothrow, warn_unused_result))
+typedef __attribute__ ((nonnull (2), /*nothrow,*/ warn_unused_result))
 ssize_t (*io_thread_cb_common_cb_t) (fd_t, void *, size_t);
 
 __attribute__ ((nonnull (1, 2, 3, 5), nothrow, warn_unused_result))
