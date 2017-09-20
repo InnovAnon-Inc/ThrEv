@@ -343,31 +343,150 @@ static int write_pipe (pipe_t *restrict p) {
       return -1;
    n = r_write (STDOUT_FILENO, buf->buf, buf->n);
    error_check (n < 0) return -2;
-   /*buf->n = n;*/
-   error_check ((size_t) n != buf->n) return -4;
+   buf->n = n;
    if (n == 0) return /*0*/ -1;
    error_check (tscpaq_enqueue (&(p->q_in), buf) != 0)
       return -3;
    return 0;
 }
 
+
+
+
+typedef struct {
+   pipe_t *restrict in;
+   pipe_t *restrict out;
+} io_t;
+
+__attribute__ ((nonnull (1, 2, 3, 4), nothrow))
+static void init_io (
+   io_t *restrict io_in,
+   io_t *restrict io_out,
+   pipe_t *restrict in,
+   pipe_t *restrict out) {
+   io_in->in  = in;
+   io_in->out = out;
+   io_out->in  = out;
+   io_out->out = in;
+}
+
+__attribute__ ((nonnull (1, 2), nothrow, warn_unused_result))
+static int alloc_io (
+   io_t *restrict dest,
+   io_t *restrict src,
+   size_t in_bufsz,  size_t in_nbuf,
+   size_t out_bufsz, size_t out_nbuf) {
+   pipe_t *restrict in;
+   pipe_t *restrict out;
+
+   in  = malloc (sizeof (pipe_t));
+   error_check (in == NULL) return -1;
+   out = malloc (sizeof (pipe_t));
+   error_check (out == NULL) {
+      free (in);
+      return -2;
+   }
+
+   init_io (dest, src, in, out);
+
+   error_check (alloc_pipe (in, in_bufsz, in_nbuf) != 0) {
+      free (out);
+      free (in);
+      return -3;
+   }
+   error_check (alloc_pipe (out, out_bufsz, out_nbuf) != 0) {
+	#pragma GCC diagnostic push
+	#pragma GCC diagnostic ignored "-Wunused-result"
+      (void) free_pipe (in);
+	#pragma GCC diagnostic pop
+      free (out);
+      free (in);
+      return -4;
+   }
+
+   return 0;
+}
+
+__attribute__ ((nonnull (1, 2), nothrow, warn_unused_result))
+static int free_io (io_t *restrict dest, io_t *restrict src) {
+   error_check (free_pipe (dest->in) != 0) return -1;
+   error_check (free_pipe (dest->out) != 0) return -2;
+   free (dest->in);
+   free (dest->out);
+   return 0;
+}
+
+
+
+
+
+
+__attribute__ ((nonnull (1), nothrow, warn_unused_result))
+static void *io_thread_cb (void *_arg) {
+   io_t *restrict arg = (io_t *restrict) _arg;
+   pipe_t *restrict in;
+   pipe_t *restrict out;
+   in  = &(arg->in);
+   out = &(arg->out);
+   while (true) {
+      error_check (read_pipe (in)  != 0) return NULL;
+      /*if (arg_in == 0) return NULL;*/
+      error_check (write_pipe (out) != 0) return NULL;
+   }
+   return NULL;
+}
+
+__attribute__ ((nonnull (1), nothrow, warn_unused_result))
+static void *worker_thread_cb (void *_arg) {
+   io_t *restrict arg = (io_t *restrict) _arg;
+   pipe_t *restrict in;
+   pipe_t *restrict out;
+   in  = &(arg->in);
+   out = &(arg->out);
+   while (true) {
+      buffer_t const *restrict buf_in;
+      buffer_t *restrict buf_out;
+
+      error_check (tscpaq_dequeue (&(in->out), (void const *restrict *restrict) &buf_in)   != 0) {
+         TODO (kill other thread);
+         return NULL;
+      }
+      error_check (tscpaq_dequeue (&(out->in), (void const *restrict *restrict) &buf_out)  != 0) {
+         TODO (kill other thread);
+         return NULL;
+      }
+      TODO (something else)
+
+      /*memcpy (buf_out->buf, buf_in->buf, min (buf_in->n, buf_out->n));*/
+      memcpy (buf_out->buf, buf_in->buf, buf_in->n);
+
+      error_check (tscpaq_enqueue (&(out->out), buf_out) != 0) {
+         TODO (kill other thread);
+         return NULL;
+      }
+      error_check (tscpaq_enqueue (&(in->in),   buf_in)  != 0) {
+         TODO (kill other thread);
+         return NULL;
+      }
+   }
+   return NULL;
+}
+
 int main (void) {
-   pipe_t p;
-   size_t bufsz = 3;
-   size_t nbuf  = 3;
-   size_t i;
-   error_check (alloc_pipe (&p, bufsz, nbuf) != 0) return EXIT_FAILURE;
+   io_t dest, src;
+   size_t in_bufsz = 3;
+   size_t in_nbuf  = 3;
+   size_t out_bufsz = 3;
+   size_t out_nbuf  = 3;
+   pthread_t io_thread, worker_thread;
+   error_check (alloc_io (&dest, &src,
+      in_bufsz, in_nbuf, out_bufsz, out_nbuf) != 0) return EXIT_FAILURE;
+   pthread_create (&io_thread, NULL, io_thread_cb, dest);
+   pthread_create (&worker_thread, NULL, worker_thread_cb, src);
+   pthread_join (&io_thread);
+   pthread_join (&worker_thread);
+   error_check (free_io (&dest, &src) != 0) return EXIT_FAILURE;
 
-   for (i = 0; i != nbuf; i++)
-      error_check (read_pipe (&p) != 0) return EXIT_FAILURE;
-   for (i = 0; i != nbuf; i++)
-      error_check (write_pipe (&p) != 0) return EXIT_FAILURE;
-   for (i = 0; i != nbuf; i++)
-      error_check (read_pipe (&p) != 0) return EXIT_FAILURE;
-   for (i = 0; i != nbuf; i++)
-      error_check (write_pipe (&p) != 0) return EXIT_FAILURE;
-
-   error_check (free_pipe (&p) != 0) return EXIT_FAILURE;
    return EXIT_SUCCESS;
 }
 
