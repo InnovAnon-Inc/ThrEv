@@ -227,10 +227,6 @@ static int alloc_buffer (
    char *restrict buf = malloc (bufsz);
    error_check (buf == NULL) return -1;
    init_buffer (buffer, buf);
-
-   TODO (delete this)
-   for (i = 0; i != bufsz; i++) buf[i] = '\0';
-
    return 0;
 }
 
@@ -322,10 +318,81 @@ static int free_pipe (pipe_t *restrict p) {
    free (p->bufs);
 }
 
+__attribute__ ((nonnull (1), nothrow, warn_unused_result))
+static int read_pipe (pipe_t *restrict p) {
+   buffer_t *restrict buf;
+   ssize_t n;
+   error_check (tscpaq_dequeue (
+      &(p->q_in), (void const *restrict *restrict) &buf) != 0)
+      return -1;
+   n = r_read (STDIN_FILENO, buf->buf, p->bufsz);
+   error_check (n < 0) return -2;
+   buf->n = n;
+   if (n == 0) return /*0*/ -1;
+   error_check (tscpaq_enqueue (&(p->q_out), buf) != 0)
+      return -3;
+   return 0;
+}
+
+__attribute__ ((nonnull (1), nothrow, warn_unused_result))
+static int write_pipe (pipe_t *restrict p) {
+   buffer_t *restrict buf;
+   ssize_t n;
+   error_check (tscpaq_dequeue (
+      &(p->q_out), (void const *restrict *restrict) &buf) != 0)
+      return -1;
+   n = r_write (STDOUT_FILENO, buf->buf, buf->n);
+   error_check (n < 0) return -2;
+   /*buf->n = n;*/
+   error_check ((size_t) n != buf->n) return -4;
+   if (n == 0) return /*0*/ -1;
+   error_check (tscpaq_enqueue (&(p->q_in), buf) != 0)
+      return -3;
+   return 0;
+}
+
+int main (void) {
+   pipe_t p;
+   size_t bufsz = 3;
+   size_t nbuf  = 3;
+   size_t i;
+   error_check (alloc_pipe (&p, bufsz, nbuf) != 0) return EXIT_FAILURE;
+
+   for (i = 0; i != nbuf; i++)
+      error_check (read_pipe (&p) != 0) return EXIT_FAILURE;
+   for (i = 0; i != nbuf; i++)
+      error_check (write_pipe (&p) != 0) return EXIT_FAILURE;
+   for (i = 0; i != nbuf; i++)
+      error_check (read_pipe (&p) != 0) return EXIT_FAILURE;
+   for (i = 0; i != nbuf; i++)
+      error_check (write_pipe (&p) != 0) return EXIT_FAILURE;
+
+   error_check (free_pipe (&p) != 0) return EXIT_FAILURE;
+   return EXIT_SUCCESS;
+}
 
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#ifdef NEW
 
 typedef struct {
    pipe_t in, out;
@@ -469,3 +536,4 @@ int main (void) {
    /*return EXIT_FAILURE;*/
 }
 
+#endif
