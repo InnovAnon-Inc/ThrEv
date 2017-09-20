@@ -250,19 +250,10 @@ static int init_pipe (
    pipe_t *restrict p,
    size_t bufsz, size_t nbuf,
    buffer_t *restrict bufs) {
+   size_t i;
    p->bufsz = bufsz;
    p->nbuf  = nbuf;
    p->bufs  = bufs;
-
-   error_check (tscpaq_alloc_queue (&(p->q_in), nbuf + 1) != 0)
-      return -2;
-   error_check (tscpaq_alloc_queue (&(p->q_out), nbuf + 1) != 0) {
-	#pragma GCC diagnostic push
-	#pragma GCC diagnostic ignored "-Wunused-result"
-      (void) tscpaq_free_queue (&(p->q_in));
-	#pragma GCC diagnostic pop
-      return -3;
-   }
 
    for (i = 0; i != nbuf; i++)
          error_check (tscpaq_enqueue (
@@ -278,8 +269,23 @@ static int alloc_pipe (
    pipe_t *restrict p,
    size_t bufsz, size_t nbuf) {
    size_t i;
-   buffer_t *restrict bufs = malloc (nbuf * sizeof (buffer_t));
+   buffer_t *restrict bufs;
+
+   bufs = malloc (nbuf * sizeof (buffer_t));
    error_check (bufs == NULL) return -1;
+
+   error_check (tscpaq_alloc_queue (&(p->q_in), nbuf + 1) != 0) {
+      free (bufs);
+      return -2;
+   }
+   error_check (tscpaq_alloc_queue (&(p->q_out), nbuf + 1) != 0) {
+      free (bufs);
+	#pragma GCC diagnostic push
+	#pragma GCC diagnostic ignored "-Wunused-result"
+      (void) tscpaq_free_queue (&(p->q_in));
+	#pragma GCC diagnostic pop
+      return -3;
+   }
    error_check (init_pipe (p, bufsz, nbuf, bufs) != 0) return -2;
    for (i = 0; i != nbuf; i++)
       error_check (alloc_buffer (bufs + i, bufsz) != 0) {
@@ -292,8 +298,8 @@ static int alloc_pipe (
 __attribute__ ((nonnull (1), nothrow))
 static void free_pipe (pipe_t *restrict p) {
    size_t i;
-   tscpaq_free (&(p->q_in));
-   tscpaq_free (&(p->q_out));
+   tscpaq_free_queue (&(p->q_in));
+   tscpaq_free_queue (&(p->q_out));
    for (i = 0; i != p->nbuf; i++)
       free_buffer (p->bufs + i);
    free (p->bufs);
