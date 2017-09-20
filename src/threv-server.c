@@ -528,6 +528,7 @@ int main (void) {
 	#pragma GCC diagnostic push
 	#pragma GCC diagnostic ignored "-Wunused-result"
    read_pipe (dest.in);
+   read_pipe (dest.in);
 
    tscpaq_dequeue (&(dest.in->q_out), (void const *restrict *restrict) &buf_in);
 puts ("b"); fflush (stdout);
