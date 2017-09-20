@@ -329,8 +329,9 @@ static ssize_t read_wrapper (
    fd_t fd,
    buffer_t *restrict buf,
    size_t bufsz) {
-   ssize_t n = r_read (fd, buf->buf, bufsz);
+   ssize_t n = r_read (fd, buf->buf, bufsz - 1);
    error_check (n < 0) return -1;
+   buf->buf[n] = '\0';
    buf->n = (size_t) n;
    return n;
 }
