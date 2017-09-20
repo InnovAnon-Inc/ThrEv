@@ -236,9 +236,9 @@ static int init_io_thread_cb (
 
 __attribute__ ((nonnull (1), nothrow))
 static void free_io_thread_cb (io_thread_cb_t *restrict arg) {
-   tscpaq_free_queue (&(args->q_out));
-   tscpaq_free_queue (&(args->q_in));
-   free (args->bufs);
+   tscpaq_free_queue (&(arg->q_out));
+   tscpaq_free_queue (&(arg->q_in));
+   free (arg->bufs);
 }
 
 typedef struct {
@@ -253,18 +253,18 @@ static void *io_thread_cb (void *_arg) {
    char *restrict buf_in;
    char *restrict buf_out;
 
-   args_in  = &(arg->in);
-   args_out = &(arg->out);
+   arg_in  = &(arg->in);
+   arg_out = &(arg->out);
 
    /* reader */
-   error_check (tscpaq_dequeue (&(args_in->q_in),  buf_in)    != 0) return NULL;
-   error_check (r_read (STDIN_FILENO, buf_in, args_in->bufsz) != 0) return NULL;
-   error_check (tscpaq_enqueue (&(args_in->q_out), buf_in)    != 0) return NULL;
+   error_check (tscpaq_dequeue (&(arg_in->q_in), &buf_in)    != 0) return NULL;
+   error_check (r_read (STDIN_FILENO, buf_in, arg_in->bufsz) != 0) return NULL;
+   error_check (tscpaq_enqueue (&(arg_in->q_out), buf_in)    != 0) return NULL;
 
    /* writer */
-   error_check (tscpaq_dequeue (&(args_out->q_out), buf_out)      != 0) return NULL;
-   error_check (r_write (STDOUT_FILENO, buf_out, args_out->bufsz) != 0) return NULL;
-   error_check (tscpaq_enqueue (&(args_out->q_in),  buf_out)      != 0) return NULL;
+   error_check (tscpaq_dequeue (&(arg_out->q_out), &buf_out)      != 0) return NULL;
+   error_check (r_write (STDOUT_FILENO, buf_out, arg_out->bufsz)  != 0) return NULL;
+   error_check (tscpaq_enqueue (&(arg_out->q_in),   buf_out)      != 0) return NULL;
 
    return NULL;
 }
@@ -299,10 +299,10 @@ int main (void) {
       char const *restrict buf_in;
       char *restrict buf_out;
 
-      error_check (tscpaq_dequeue (&(args_in->q_out), buf_in) != 0) break;
+      error_check (tscpaq_dequeue (&(args_in->q_out), &buf_in)  != 0) break;
       TODO (something else)
       memcpy (buf_out, buf_in, bufsz);
-      error_check (tscpaq_enqueue (&(args_out->q_in), buf_out) != 0) break;
+      error_check (tscpaq_enqueue (&(args_out->q_in),  buf_out) != 0) break;
    }
    /*__builtin_unreachable ();*/
 
