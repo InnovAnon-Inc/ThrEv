@@ -353,6 +353,7 @@ static ssize_t write_wrapper (
    buffer_t *restrict buf,
    size_t bufsz) {
    ssize_t n;
+   printf ("buf->n:%d\n", (int) (buf->n)); fflush (stdout);
    n = r_write (fd, buf->buf, buf->n);
    error_check (n <= 0) return -1;
    buf->n = (size_t) n;
