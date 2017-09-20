@@ -8,8 +8,14 @@
 
 #include <ev.h>
 
+#include <glitter.h>
 /*#include <restart.h>*/
+#include <tscpaq.h>
+
 #include <ezudp-server.h>
+
+#ifdef OLD
+
 #include <thpool.h>
 
 typedef struct {
@@ -162,3 +168,137 @@ int main (void) {
 
    return EXIT_SUCCESS;
 }
+
+#endif
+
+/*
+ read from socket
+ enqueue data
+
+ dequeue data
+ process data
+ enqueue result
+
+ dequeue result
+ write to socket
+
+
+ check whether results can be dequeued
+ if so, dequeue result
+        write to socket
+ else
+ check whether data can be enqueued
+ if so, read from socket
+        enqueue data
+ */
+
+
+
+typedef struct {
+   size_t bufsz, nbuf;
+   tscpaq_t q_in, q_out
+   char *restrict bufs;
+} io_thread_cb_t;
+
+__attribute__ ((nonnull (1), nothrow, warn_unused_result))
+static int init_io_thread_cb (
+   io_thread_cb_t *restrict args, size_t bufsz, size_t nbuf) {
+   args->bufsz = bufsz;
+   args->nbuf  = nbuf;
+
+   args->bufs = (char *restrict) malloc (args->nbuf * args->bufsz);
+   error_check (args->bufs == NULL) return -1;
+
+   error_check (tscpaq_alloc_queue (&(args->q_in), args->nbuf) != 0) {
+      free (args->bufs);
+      return -2;
+   }
+
+   error_check (tscpaq_alloc_queue (&(args->q_out), args->nbuf) != 0) {
+      tscpaq_free_queue (&(args->q_in));
+      free (args->bufs);
+      return -3;
+   }
+
+   return 0;
+}
+
+__attribute__ ((nonnull (1), nothrow))
+static void free_io_thread_cb (io_thread_cb_t *restrict arg) {
+   tscpaq_free_queue (&(args->q_out));
+   tscpaq_free_queue (&(args->q_in));
+   free (args->bufs);
+}
+
+typedef struct {
+   io_thread_cb_t in, out;
+} io_thread_cb2_t;
+
+__attribute__ ((nonnull (1), nothrow, warn_unused_result))
+static void *io_thread_cb (void *_arg) {
+   io_thread_cb2_t *restrict arg = (io_thread_cb2_t *restrict) _arg;
+   io_thread_cb_t *restrict arg_in;
+   io_thread_cb_t *restrict arg_out;
+   char *restrict buf_in;
+   char *restrict buf_out;
+
+   args_in  = &(arg->in);
+   args_out = &(arg->out);
+
+   /* reader */
+   error_check (tscpaq_dequeue (&(args_in->q_in),  buf_in)    != 0) return NULL;
+   error_check (r_read (STDIN_FILENO, buf_in, args_in->bufsz) != 0) return NULL;
+   error_check (tscpaq_enqueue (&(args_in->q_out), buf_in)    != 0) return NULL;
+
+   /* writer */
+   error_check (tscpaq_dequeue (&(args_out->q_out), buf_out)      != 0) return NULL;
+   error_check (r_write (STDOUT_FILENO, buf_out, args_out->bufsz) != 0) return NULL;
+   error_check (tscpaq_enqueue (&(args_out->q_in),  buf_out)      != 0) return NULL;
+
+   return NULL;
+}
+
+__attribute__ ((const, nonnull (1), nothrow, returns_nonnull, warn_unused_result))
+static char const *restrict get_buf (
+   char const bufs[],
+   size_t i, size_t bufsz, size_t nbuf) {
+   return bufs + i * bufsz
+}
+
+__attribute__ ((nothrow))
+int main (void) {
+   /*size_t bufsz = 512 * sizeof (char);
+   size_t nbuf  = 3;
+   char *restrict bufs;
+   tscpaq_t q_in, q_out;*/
+   io_thread_cb_t *restrict args_in;
+   io_thread_cb_t *restrict args_out;
+   io_thread_cb2_t args;
+   pthread_t io_thread;
+
+   args_in  = &(args.in);
+   args_out = &(args.out);
+
+   error_check (init_io_thread_cb (args_in,  512, 3) != 0) return EXIT_FAILURE;
+   error_check (init_io_thread_cb (args_out, 512, 3) != 0) return EXIT_FAILURE;
+
+   pthread_create (&io_thread, NULL, io_thread_cb, (void *) args);
+
+   while (true) {
+      char const *restrict buf_in;
+      char *restrict buf_out;
+
+      error_check (tscpaq_dequeue (&(args_in->q_out), buf_in) != 0) break;
+      TODO (something else)
+      memcpy (buf_out, buf_in, bufsz);
+      error_check (tscpaq_enqueue (&(args_out->q_in), buf_out) != 0) break;
+   }
+   /*__builtin_unreachable ();*/
+
+   TODO (pthread kill/join)
+   free_io_thread_cb (args_out);
+   free_io_thread_cb (args_in);
+   /*return EXIT_SUCCESS;*/
+   return EXIT_FAILURE;
+}
+
