@@ -327,11 +327,12 @@ puts ("BA"); fflush (stdout);
       &(p->q_in), (void const *restrict *restrict) &buf) != 0)
       return -1;
 puts ("BB"); fflush (stdout);
-   n = r_read (STDIN_FILENO, buf->buf, p->bufsz);
+   n = r_read (STDIN_FILENO, buf->buf, p->bufsz - 1);
 puts ("BC"); fflush (stdout);
    error_check (n < 0) return -2;
 puts ("BD"); fflush (stdout);
-   buf->n = (size_t) n;
+   buf->buf[(size_t) n] = '\0';
+   buf->n = (size_t) n + 1;
 puts ("BE"); fflush (stdout);
    if (n == 0) return /*0*/ -1;
 puts ("BF"); fflush (stdout);
