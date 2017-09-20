@@ -332,7 +332,8 @@ static ssize_t read_wrapper (
    ssize_t n = r_read (fd, buf->buf, bufsz - 1);
    error_check (n < 0) return -1;
    buf->buf[n] = '\0';
-   buf->n = (size_t) n;
+   puts (buf->buf);
+   buf->n = (size_t) n + 1;
    return n;
 }
 
