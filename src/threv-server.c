@@ -492,7 +492,7 @@ static void *wr_thread_cb (void *restrict _arg) {
    io_t *restrict arg = (io_t *restrict) _arg;
 
    TODO (do not use default loop. we have special needs)
-   struct ev_loop *restrict loop = EV_DEFAULT;
+   struct ev_loop *restrict loop = ev_loop_new (EVFLAG_AUTO);
 
    wr_watcher_t wr_watcher;
 
