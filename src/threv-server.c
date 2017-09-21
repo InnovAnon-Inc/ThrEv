@@ -414,7 +414,7 @@ static int free_io (io_t *restrict dest/*, io_t *restrict src*/) {
 
 
 
-
+#define DO_ASYNC 1
 
 #ifndef DO_ASYNC
 __attribute__ ((nonnull (1), nothrow, warn_unused_result))
