@@ -5,91 +5,17 @@
 #define _POSIX_C_SOURCE 200112L
 #define __STDC_VERSION__ 200112L
 
-#include <stdio.h> /* for puts */
-#include <stdlib.h>
-#include <string.h>
-#include <netinet/in.h>
-
-#include <glitter.h>
-
 	#pragma GCC diagnostic push
 	#pragma GCC diagnostic ignored "-Wpadded"
 	#pragma GCC diagnostic ignored "-Wnested-externs"
 	#pragma GCC diagnostic ignored "-Wmissing-prototypes"
 #include <ev.h>
 	#pragma GCC diagnostic pop
+#include <pthread.h>
 
-#include <restart.h>
 #include <io.h>
+#include <threv.h>
 
-#include <ezudp-server.h>
-
-#ifdef OLD
-
-#include <thpool.h>
-
-int ezthpool (int (*cb) (threadpool, socket_t), socket_t arg) {
-	threadpool thpool = thpool_init (2);
-
-	if (cb (thpool, arg) != 0) {
-		thpool_destroy (thpool);
-		return -1;
-	}
-
-	thpool_wait (thpool);
-	thpool_destroy (thpool);
-	return 0;
-}
-
-static int ezudpcb (socket_t s, void *unused) {
-   return ezthpool (ezthpoolcb, s);
-}
-
-
-
-
-
-
-#endif
-
-/*
- read from socket
- enqueue data
-
- dequeue data
- process data
- enqueue result
-
- dequeue result
- write to socket
-
-
- check whether results can be dequeued
- if so, dequeue result
-        write to socket
- else
- check whether data can be enqueued
- if so, read from socket
-        enqueue data
- */
-
-
-
-
-
-
-
-
-/*#define DO_ASYNC 1*/
-
-#ifndef DO_ASYNC
-__attribute__ ((nonnull (1), nothrow, warn_unused_result))
-static void *io_thread_cb (void *restrict _arg) {
-   io_t *restrict arg = (io_t *restrict) _arg;
-   error_check (rw_io (arg, STDIN_FILENO, STDOUT_FILENO) != 0) return NULL;
-   return NULL;
-}
-#else
 	#pragma GCC diagnostic push
 	#pragma GCC diagnostic ignored "-Wpadded"
 typedef struct {
@@ -164,28 +90,18 @@ static void *wr_thread_cb (void *restrict _arg) {
    ev_run (loop, 0);
    return NULL;
 }
-#endif
-
-
-
-
-
-
-TODO (this macro has been moved to glitter.h)
-#ifndef min
-#define min(A, B) ((A) < (B) ? (A) : (B))
-#endif
-
-
-
 
 __attribute__ ((nonnull (1, 2), nothrow, warn_unused_result))
 static int worker_thread_cb_cb (
    buffer_t *restrict buf_out,
    buffer_t const *restrict buf_in,
    void *restrict unused) {
-   buf_out->n = min (buf_in->n, buf_out->n);
-   (void) memcpy (buf_out->buf, buf_in->buf, buf_out->n);
+   threv_cb_t *restrict arg = (threv_cb_t *restrict) _arg;
+
+   TODO (init buf_out->n to out_bufsz below)
+   error_check ((*arg) (buf_out->buf, buf_in->buf,
+      buf_in->n, &(buf_out->n)) != 0)
+      return -1;
    return 0;
 }
 
@@ -196,41 +112,66 @@ static void *worker_thread_cb (void *restrict _arg) {
    return NULL;
 }
 
-__attribute__ ((nothrow))
-int main (void) {
+__attribute__ ((nonnull (7), nothrow, warn_unused_result))
+int threv (
+   fd_t in, fd_t out,
+   size_t in_bufsz, size_t in_nbuf,
+   size_t out_bufsz, size_t out_nbuf,
+   threv_cb_t cb) {
    io_t dest/*, src*/;
-   size_t in_bufsz = 3;
-   size_t in_nbuf  = 3;
-   size_t out_bufsz = 3;
-   size_t out_nbuf  = 3;
-#ifndef DO_ASYNC
-   pthread_t io_thread;
-#else
    pthread_t rd_thread;
    pthread_t wr_thread;
-#endif
    pthread_t worker_thread;
    buffer_t *restrict buf_in;
    buffer_t *restrict buf_out;
    error_check (alloc_io (&dest, /*&src,*/
-      in_bufsz, in_nbuf, out_bufsz, out_nbuf) != 0) return EXIT_FAILURE;
+      in_bufsz, in_nbuf, out_bufsz, out_nbuf) != 0) return -1;
 
-#ifndef DO_ASYNC
-   pthread_create (&io_thread, NULL, io_thread_cb, &dest);
-#else
-   pthread_create (&rd_thread, NULL, rd_thread_cb, &dest);
-   pthread_create (&wr_thread, NULL, wr_thread_cb, &dest);
-#endif
-   pthread_create (&worker_thread, NULL, worker_thread_cb, /*&src*/ &dest);
-#ifndef DO_ASYNC
-   pthread_join (io_thread, NULL);
-#else
-   pthread_join (rd_thread, NULL);
-   pthread_join (wr_thread, NULL);
-#endif
-   pthread_join (worker_thread, NULL);
+   error_check (pthread_create (&rd_thread, NULL, rd_thread_cb, &dest) != 0) {
+	#pragma GCC diagnostic push
+	#pragma GCC diagnostic ignored "-Wunused-result"
+      (void) free_io (&dest);
+	#pragma GCC diagnostic pop
+      return -2;
+   }
+   error_check (pthread_create (&wr_thread, NULL, wr_thread_cb, &dest) != 0) {
+	#pragma GCC diagnostic push
+	#pragma GCC diagnostic ignored "-Wunused-result"
+      (void) free_io (&dest);
+	#pragma GCC diagnostic pop
+      return -3;
+   }
+   error_check (pthread_create (&worker_thread, NULL, worker_thread_cb, /*&src*/ &dest) != 0) {
+	#pragma GCC diagnostic push
+	#pragma GCC diagnostic ignored "-Wunused-result"
+      (void) free_io (&dest);
+	#pragma GCC diagnostic pop
+      return -4;
+   }
 
-   error_check (free_io (&dest/*, &src*/) != 0) return EXIT_FAILURE;
+   error_check (pthread_join (rd_thread, NULL) != 0) {
+	#pragma GCC diagnostic push
+	#pragma GCC diagnostic ignored "-Wunused-result"
+      (void) free_io (&dest);
+	#pragma GCC diagnostic pop
+      return -5;
+   }
+   error_check (pthread_join (wr_thread, NULL) != 0) {
+	#pragma GCC diagnostic push
+	#pragma GCC diagnostic ignored "-Wunused-result"
+      (void) free_io (&dest);
+	#pragma GCC diagnostic pop
+      return -6;
+   }
+   error_check (pthread_join (worker_thread, NULL) != 0) {
+	#pragma GCC diagnostic push
+	#pragma GCC diagnostic ignored "-Wunused-result"
+      (void) free_io (&dest);
+	#pragma GCC diagnostic pop
+      return -7;
+   }
 
-   return EXIT_SUCCESS;
+   error_check (free_io (&dest/*, &src*/) != 0) return -8;
+
+   return 0;
 }

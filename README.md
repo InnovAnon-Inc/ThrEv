@@ -1,3 +1,7 @@
-rn just an echo server... eventually, this will solve the problem:
-what is a fast way to do the i/o necessary to invoke a callback function
-which takes an initialized buffer as a parameter?
+# ThrEv
+Event loop (libev) version of ThrIO
+(read event loop in one thread,
+write event loop in another thread,
+worker in yet another thread)
+
+Easy I/O app development library (reads, invokes a callback, writes)
