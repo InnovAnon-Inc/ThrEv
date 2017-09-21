@@ -80,7 +80,7 @@ static int ezudpcb (socket_t s, void *unused) {
 
 
 
-#define DO_ASYNC 1
+/*#define DO_ASYNC 1*/
 
 #ifndef DO_ASYNC
 __attribute__ ((nonnull (1), nothrow, warn_unused_result))
