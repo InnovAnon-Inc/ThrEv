@@ -415,6 +415,20 @@ static int free_io (io_t *restrict dest/*, io_t *restrict src*/) {
 
 
 
+
+#ifndef DO_ASYNC
+__attribute__ ((nonnull (1), nothrow, warn_unused_result))
+static void *io_thread_cb (void *restrict _arg) {
+   io_t *restrict arg = (io_t *restrict) _arg;
+
+   while (true) {
+      error_check (read_pipe (arg->in, STDIN_FILENO)  != 0) return NULL;
+      error_check (write_pipe (arg->out, STDOUT_FILENO) != 0) return NULL;
+   }
+
+   return NULL;
+}
+#else
 	#pragma GCC diagnostic push
 	#pragma GCC diagnostic ignored "-Wpadded"
 typedef struct {
@@ -433,51 +447,66 @@ typedef struct {
 } wr_watcher_t;
 	#pragma GCC diagnostic pop
 
+TODO (ev_rw_cb_common ())
+
 __attribute__ ((nonnull (1), nothrow))
 static void ev_read_cb (EV_P_ ev_io *restrict _w, int revents) {
    rd_watcher_t *restrict w = (rd_watcher_t *restrict) _w;
    TODO (check revents)
-   error_check (read_pipe (w->in, w->fd)  != 0) return;
+   TODO (do not block on read_pipe queue ops)
+   error_check (read_pipe (w->in, w->fd)  != 0) {
+      TODO (stop ev loop)
+      return;
+   }
 }
 __attribute__ ((nonnull (1), nothrow))
 static void ev_write_cb (EV_P_ ev_io *restrict _w, int revents) {
    wr_watcher_t *restrict w = (wr_watcher_t *restrict) _w;
    TODO (check revents)
-   error_check (write_pipe (w->out, w->fd) != 0) return;
+   TODO (do not block on read_pipe queue ops)
+   error_check (write_pipe (w->out, w->fd) != 0) {
+      TODO (stop ev loop)
+      return;
+   }
 }
 
 __attribute__ ((nonnull (1), nothrow, warn_unused_result))
-static void *io_thread_cb (void *restrict _arg) {
+static void *rd_thread_cb (void *restrict _arg) {
    io_t *restrict arg = (io_t *restrict) _arg;
 
-   TODO (async should be optional. tradional io should also be possible)
    struct ev_loop *restrict loop = EV_DEFAULT;
 
    rd_watcher_t rd_watcher;
-   wr_watcher_t wr_watcher;
 
    rd_watcher.in  = arg->in;
-   wr_watcher.out = arg->out;
 
-#ifdef DO_ASYNC
-   while (true) {
-      error_check (read_pipe (arg->in, STDIN_FILENO)  != 0) return NULL;
-      error_check (write_pipe (arg->out, STDOUT_FILENO) != 0) return NULL;
-   }
-#else
    rd_watcher.fd = STDIN_FILENO;
-   wr_watcher.fd = STDOUT_FILENO;
    ev_io_init (&(rd_watcher.io), ev_read_cb, rd_watcher.fd, EV_READ);
    ev_io_start (loop, (ev_io *) &rd_watcher);
+
+   ev_run (loop, 0);
+   return NULL;
+}
+__attribute__ ((nonnull (1), nothrow, warn_unused_result))
+static void *wr_thread_cb (void *restrict _arg) {
+   io_t *restrict arg = (io_t *restrict) _arg;
+
+   TODO (do not use default loop. we have special needs)
+   struct ev_loop *restrict loop = EV_DEFAULT;
+
+   wr_watcher_t wr_watcher;
+
+   wr_watcher.out = arg->out;
+
+   wr_watcher.fd = STDOUT_FILENO;
 
    ev_io_init (&(wr_watcher.io), ev_write_cb, wr_watcher.fd, EV_WRITE);
    ev_io_start (loop, (ev_io *) &wr_watcher);
 
    ev_run (loop, 0);
-#endif
    return NULL;
 }
-
+#endif
 
 
 
@@ -547,15 +576,31 @@ int main (void) {
    size_t in_nbuf  = 3;
    size_t out_bufsz = 3;
    size_t out_nbuf  = 3;
-   pthread_t io_thread, worker_thread;
+#ifndef DO_ASYNC
+   pthread_t io_thread;
+#else
+   pthread_t rd_thread;
+   pthread_t wr_thread;
+#endif
+   pthread_t worker_thread;
    buffer_t *restrict buf_in;
    buffer_t *restrict buf_out;
    error_check (alloc_io (&dest, /*&src,*/
       in_bufsz, in_nbuf, out_bufsz, out_nbuf) != 0) return EXIT_FAILURE;
 
+#ifndef DO_ASYNC
    pthread_create (&io_thread, NULL, io_thread_cb, &dest);
+#else
+   pthread_create (&rd_thread, NULL, rd_thread_cb, &dest);
+   pthread_create (&wr_thread, NULL, wr_thread_cb, &dest);
+#endif
    pthread_create (&worker_thread, NULL, worker_thread_cb, /*&src*/ &dest);
+#ifndef DO_ASYNC
    pthread_join (io_thread, NULL);
+#else
+   pthread_join (rd_thread, NULL);
+   pthread_join (wr_thread, NULL);
+#endif
    pthread_join (worker_thread, NULL);
 
    error_check (free_io (&dest/*, &src*/) != 0) return EXIT_FAILURE;
