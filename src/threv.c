@@ -55,17 +55,23 @@ static void ev_write_cb (EV_P_ ev_io *restrict _w, int revents) {
    }
 }
 
+typedef struct {
+   io_t io;
+   fd_t in;
+   fd_t out;
+} thread_cb_t;
+
 __attribute__ ((nonnull (1), nothrow, warn_unused_result))
 static void *rd_thread_cb (void *restrict _arg) {
-   io_t *restrict arg = (io_t *restrict) _arg;
+   thread_cb_t *restrict arg = (thread_cb_t *restrict) _arg;
 
    struct ev_loop *restrict loop = EV_DEFAULT;
 
    rd_watcher_t rd_watcher;
 
-   rd_watcher.in  = arg->in;
+   rd_watcher.in  = arg->io.in;
 
-   rd_watcher.fd = STDIN_FILENO;
+   rd_watcher.fd = arg->in;
    ev_io_init (&(rd_watcher.io), ev_read_cb, rd_watcher.fd, EV_READ);
    ev_io_start (loop, (ev_io *) &rd_watcher);
 
@@ -74,15 +80,15 @@ static void *rd_thread_cb (void *restrict _arg) {
 }
 __attribute__ ((nonnull (1), nothrow, warn_unused_result))
 static void *wr_thread_cb (void *restrict _arg) {
-   io_t *restrict arg = (io_t *restrict) _arg;
+   thread_cb_t *restrict arg = (thread_cb_t *restrict) _arg;
 
    struct ev_loop *restrict loop = ev_loop_new (EVFLAG_AUTO);
 
    wr_watcher_t wr_watcher;
 
-   wr_watcher.out = arg->out;
+   wr_watcher.out = arg->out.out;
 
-   wr_watcher.fd = STDOUT_FILENO;
+   wr_watcher.fd = arg->out;
 
    ev_io_init (&(wr_watcher.io), ev_write_cb, wr_watcher.fd, EV_WRITE);
    ev_io_start (loop, (ev_io *) &wr_watcher);
