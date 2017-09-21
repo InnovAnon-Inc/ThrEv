@@ -463,10 +463,10 @@ static void *io_thread_cb (void *restrict _arg) {
 
    rd_watcher.fd = STDIN_FILENO;
    wr_watcher.fd = STDOUT_FILENO;
-   ev_io_init (&(rd_watcher.io), rd_cb, rd_watcher.fd, EV_READ);
+   ev_io_init (&(rd_watcher.io), ev_read_cb, rd_watcher.fd, EV_READ);
    ev_io_start (loop, (ev_io *) &rd_watcher);
 
-   ev_io_init (&(wr_watcher.io), wr_cb, wr_watcher.fd, EV_WRITE);
+   ev_io_init (&(wr_watcher.io), ev_write_cb, wr_watcher.fd, EV_WRITE);
    ev_io_start (loop, (ev_io *) &wr_watcher);
 
    ev_run (loop, 0);
