@@ -121,7 +121,7 @@ typedef struct {
 __attribute__ ((nonnull (1), nothrow, warn_unused_result))
 static void *worker_thread_cb (void *restrict _arg) {
    worker_cb_t *restrict arg = (worker_cb_t *restrict) _arg;
-   error_check (worker_io (arg->io, worker_thread_cb_cb, worker_cb->cb) != 0) return NULL;
+   error_check (worker_io (arg->io, worker_thread_cb_cb, arg->cb) != 0) return NULL;
    return NULL;
 }
 
