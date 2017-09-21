@@ -151,34 +151,6 @@ static int ezudpcb (socket_t s, void *unused) {
 
 
 
-typedef struct {
-
-} io_thread_t;
-
-void *io_thread_cb (void *_arg) {
-   io_thread_t *arg = (io_thread_t *) _arg;
-   /* alloc buf, read into buf, enqueue buf */
-   /* dequeue buf, write from buf, dealloc buf */
-   return NULL;
-}
-
-int main (void) {
-   /*
-   const int err = ezudp_server (1234, INADDR_ANY, ezudpcb, NULL);
-   if (err != 0) {
-      fprintf (stderr, "err:%d\n", err);
-      return EXIT_FAILURE;
-   }*/
-
-   pthread_t io_thread;
-   io_thread_t io_thread_arg;
-
-   pthread_create (&io_thread, NULL, io_thread_cb, io_thread_arg);
-   work_thread_cb ();
-
-   return EXIT_SUCCESS;
-}
-
 #endif
 
 /*
@@ -257,10 +229,10 @@ static int init_pipe (
    p->bufs  = bufs;
 
    for (i = 0; i != nbuf; i++)
-         error_check (tscpaq_enqueue (
-         &(p->q_in),
-         bufs + i) != 0)
-         return -4;
+      error_check (tscpaq_enqueue (
+      &(p->q_in),
+      bufs + i) != 0)
+      return -4;
 
    return 0;
 }
@@ -318,8 +290,10 @@ static int free_pipe (pipe_t *restrict p) {
    free (p->bufs);
 }
 
+TODO (rw_pipe_common ())
+
 __attribute__ ((nonnull (1), nothrow, warn_unused_result))
-static int read_pipe (pipe_t *restrict p) {
+static int read_pipe (pipe_t *restrict p, fd_t fd) {
    buffer_t *restrict buf;
    ssize_t n;
 
@@ -327,7 +301,7 @@ static int read_pipe (pipe_t *restrict p) {
       &(p->q_in), (void const *restrict *restrict) &buf) != 0)
       return -1;
 
-   n = r_read (STDIN_FILENO, buf->buf, p->bufsz - 1);
+   n = r_read (fd, buf->buf, p->bufsz - 1);
 
    error_check (n < 0) return -2;
 
@@ -343,7 +317,7 @@ static int read_pipe (pipe_t *restrict p) {
 }
 
 __attribute__ ((nonnull (1), nothrow, warn_unused_result))
-static int write_pipe (pipe_t *restrict p) {
+static int write_pipe (pipe_t *restrict p, fd_t fd) {
    buffer_t *restrict buf;
    ssize_t n;
 
@@ -351,7 +325,7 @@ static int write_pipe (pipe_t *restrict p) {
       &(p->q_out), (void const *restrict *restrict) &buf) != 0)
       return -1;
 
-   n = r_write (STDOUT_FILENO, buf->buf, buf->n);
+   n = r_write (fd, buf->buf, buf->n);
 
    error_check (n < 0) return -2;
 
@@ -367,11 +341,13 @@ static int write_pipe (pipe_t *restrict p) {
 
 
 
-
+	#pragma GCC diagnostic push
+	#pragma GCC diagnostic ignored "-Wpadded"
 typedef struct {
    pipe_t *restrict in;
    pipe_t *restrict out;
 } io_t;
+	#pragma GCC diagnostic pop
 
 __attribute__ ((nonnull (1, 2, 3/*, 4*/), nothrow))
 static void init_io (
@@ -436,21 +412,64 @@ static int free_io (io_t *restrict dest/*, io_t *restrict src*/) {
 
 
 
+
+
+
+	#pragma GCC diagnostic push
+	#pragma GCC diagnostic ignored "-Wpadded"
+typedef struct {
+   ev_io io;
+   fd_t fd;
+   pipe_t *restrict in;
+} rd_watcher_t;
+	#pragma GCC diagnostic pop
+
+	#pragma GCC diagnostic push
+	#pragma GCC diagnostic ignored "-Wpadded"
+typedef struct {
+   ev_io io;
+   fd_t fd;
+   pipe_t *restrict out;
+} wr_watcher_t;
+	#pragma GCC diagnostic pop
+
+__attribute__ ((nonnull (1), nothrow))
+static void ev_read_cb (EV_P_ ev_io *restrict _w, int revents) {
+   rd_watcher_t *restrict w = (rd_watcher_t *restrict) _w;
+   TODO (check revents)
+   error_check (read_pipe (w->in, w->fd)  != 0) return;
+}
+__attribute__ ((nonnull (1), nothrow))
+static void ev_write_cb (EV_P_ ev_io *restrict _w, int revents) {
+   wr_watcher_t *restrict w = (wr_watcher_t *restrict) _w;
+   TODO (check revents)
+   error_check (write_pipe (w->out, w->fd) != 0) return;
+}
+
 __attribute__ ((nonnull (1), nothrow, warn_unused_result))
-static void *io_thread_cb (void *_arg) {
+static void *io_thread_cb (void *restrict _arg) {
    io_t *restrict arg = (io_t *restrict) _arg;
    pipe_t *restrict in;
    pipe_t *restrict out;
-   in  = arg->in;
-   out = arg->out;
-   while (true) {
 
-      error_check (read_pipe (in)  != 0) return NULL;
+   TODO (async should be optional. tradional io should also be possible)
+   struct ev_loop *restrict loop = EV_DEFAULT;
 
-      /*if (arg_in == 0) return NULL;*/
-      error_check (write_pipe (out) != 0) return NULL;
+   rd_watcher_t rd_watcher;
+   wr_watcher_t wr_watcher;
 
-   }
+   rd_watcher.in  = arg->in;
+   wr_watcher.out = arg->out;
+
+   rd_watcher.fd = STDIN_FILENO;
+   wr_watcher.fd = STDOUT_FILENO;
+   ev_io_init (&(rd_watcher.io), rd_cb, rd_watcher.fd, EV_READ);
+   ev_io_start (loop, (ev_io *) &rd_watcher);
+
+   ev_io_init (&(wr_watcher.io), wr_cb, wr_watcher.fd, EV_WRITE);
+   ev_io_start (loop, (ev_io *) &wr_watcher);
+
+   ev_run (loop, 0);
    return NULL;
 }
 
@@ -469,7 +488,7 @@ static void *io_thread_cb (void *_arg) {
 
 
 __attribute__ ((nonnull (1), nothrow, warn_unused_result))
-static void *worker_thread_cb (void *_arg) {
+static void *worker_thread_cb (void *restrict _arg) {
    io_t *restrict arg = (io_t *restrict) _arg;
    pipe_t *restrict in;
    pipe_t *restrict out;
@@ -496,6 +515,7 @@ static void *worker_thread_cb (void *_arg) {
       if (buf_in->n == 0)
          return NULL;
 
+      TODO (something else... something with threadpools)
       memcpy (buf_out->buf, buf_in->buf, min (buf_in->n, out->bufsz));
       /*memcpy (buf_out->buf, buf_in->buf, buf_in->n);*/
       buf_out->n = min (buf_in->n, out->bufsz);
@@ -515,6 +535,7 @@ static void *worker_thread_cb (void *_arg) {
    return NULL;
 }
 
+__attribute__ ((nothrow))
 int main (void) {
    io_t dest/*, src*/;
    size_t in_bufsz = 3;
@@ -531,211 +552,8 @@ int main (void) {
    pthread_create (&worker_thread, NULL, worker_thread_cb, /*&src*/ &dest);
    pthread_join (io_thread, NULL);
    pthread_join (worker_thread, NULL);
-#ifdef TESTING
-	#pragma GCC diagnostic push
-	#pragma GCC diagnostic ignored "-Wunused-result"
-   /*read_pipe (dest.in);
-   write_pipe (dest.in);
-   puts ("test"); fflush (stdout);*/
-
-
-
-
-
-   read_pipe (dest.in);
-
-   tscpaq_dequeue (&(dest.in->q_out), (void const *restrict *restrict) &buf_in);
-puts ("b"); fflush (stdout);
-   tscpaq_dequeue (&(dest.out->q_in), (void const *restrict *restrict) &buf_out);
-puts ("c"); fflush (stdout);
-      TODO (something else)
-
-      memcpy (buf_out->buf, buf_in->buf, min (buf_in->n, buf_out->n));
-      /*memcpy (buf_out->buf, buf_in->buf, buf_in->n);*/
-      buf_out->n = buf_in->n;
-
-puts ("d"); fflush (stdout);
-      tscpaq_enqueue (&(dest.out->q_out), buf_out);
-puts ("e"); fflush (stdout);
-      tscpaq_enqueue (&(dest.in->q_in),   buf_in);
-
-
-
-
-
-
-   write_pipe (dest.out);
-   /*(void) io_thread_cb (&dest);*/
-   /*(void) worker_thread_cb (&dest);*/
-   #pragma GCC diagnostic pop
-#endif
 
    error_check (free_io (&dest/*, &src*/) != 0) return EXIT_FAILURE;
 
    return EXIT_SUCCESS;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#ifdef NEW
-
-typedef struct {
-   pipe_t in, out;
-} io_thread_cb2_t;
-
-typedef __attribute__ ((nonnull (2), /*nothrow,*/ warn_unused_result))
-ssize_t (*io_thread_cb_common_cb_t) (fd_t, buffer_t *, size_t);
-
-__attribute__ ((nonnull (2), /*nothrow,*/))
-static ssize_t read_wrapper (
-   fd_t fd,
-   buffer_t *restrict buf,
-   size_t bufsz) {
-   ssize_t n = r_read (fd, buf->buf, bufsz - 1);
-   error_check (n < 0) return -1;
-   buf->buf[n] = '\0';
-   printf ("rd buf:%s\n", buf->buf); fflush (stdout);
-   printf ("rd buf->n:%d\n", (int) n); fflush (stdout);
-   buf->n = (size_t) n + 1;
-   return n;
-}
-
-__attribute__ ((nonnull (2), /*nothrow,*/))
-static ssize_t write_wrapper (
-   fd_t fd,
-   buffer_t *restrict buf,
-   size_t bufsz) {
-   ssize_t n;
-   printf ("wr buf->n:%d\n", (int) (buf->n)); fflush (stdout);
-   printf ("wr buf:%s\n", buf->buf); fflush (stdout);
-   n = r_write (fd, buf->buf, buf->n);
-   error_check (n <= 0) return -1;
-   buf->n = (size_t) n;
-   return n;
-}
-
-__attribute__ ((nonnull (1, 2, 4), nothrow, warn_unused_result))
-static int io_thread_cb_common (
-   tscpaq_t *restrict q_in,
-   tscpaq_t *restrict q_out,
-   size_t bufsz,
-   io_thread_cb_common_cb_t cb,
-   fd_t fd) {
-   buffer_t *restrict buf;
-   ssize_t n;
-   /*while (true) {*/
-      error_check (tscpaq_dequeue (
-         q_in, (void const *restrict *restrict) &buf) != 0)
-         return -1;
-      n = cb (fd, buf, bufsz);
-      if (n == 0) return /*0*/ -1;
-      error_check (n < 0) return -2;
-      error_check (tscpaq_enqueue (q_out, buf) != 0)
-         return -3;
-   /*}*/
-   return 0;
-}
-
-__attribute__ ((nonnull (1), nothrow, warn_unused_result))
-static int io_thread_cb_rd (
-   pipe_t *restrict arg_in) {
-   return io_thread_cb_common (
-      &(arg_in->q_in), &(arg_in->q_out), arg_in->bufsz,
-      read_wrapper, STDIN_FILENO);
-}
-
-__attribute__ ((nonnull (1), nothrow, warn_unused_result))
-static int io_thread_cb_wr (
-   pipe_t *restrict arg_out) {
-   return io_thread_cb_common (
-      &(arg_out->q_out), &(arg_out->q_in), arg_out->bufsz /* *ret*/,
-      write_wrapper, STDOUT_FILENO);
-}
-
-__attribute__ ((nonnull (1), nothrow, warn_unused_result))
-static void *io_thread_cb (void *_arg) {
-   io_thread_cb2_t *restrict arg = (io_thread_cb2_t *restrict) _arg;
-   pipe_t *restrict arg_in;
-   pipe_t *restrict arg_out;
-   arg_in  = &(arg->in);
-   arg_out = &(arg->out);
-   while (true) {
-      error_check (io_thread_cb_rd ((void *) arg_in)  != 0) return NULL;
-      /*if (arg_in == 0) return NULL;*/
-      error_check (io_thread_cb_wr ((void *) arg_out) != 0) return NULL;
-   }
-   return NULL;
-}
-
-
-
-__attribute__ ((nothrow))
-int main (void) {
-   pipe_t *restrict args_in;
-   pipe_t *restrict args_out;
-   io_thread_cb2_t args;
-   pthread_t io_thread;
-
-   args_in  = &(args.in);
-   args_out = &(args.out);
-
-   error_check (alloc_pipe (args_in,  (size_t)   3, (size_t) 3) != 0) return EXIT_FAILURE;
-   error_check (alloc_pipe (args_out, (size_t)   3, (size_t) 3) != 0) return EXIT_FAILURE;
-
-   pthread_create (&io_thread, NULL, io_thread_cb, (void *) &args);
-
-   while (true) { /* while other thread is alive*/
-      buffer_t const *restrict buf_in;
-      buffer_t *restrict buf_out;
-
-      error_check (tscpaq_dequeue (&(args_in->q_out), (void const *restrict *restrict) &buf_in)   != 0) {
-         TODO (kill other thread);
-         /*break;*/return EXIT_FAILURE;
-      }
-      error_check (tscpaq_dequeue (&(args_out->q_in), (void const *restrict *restrict) &buf_out)  != 0) {
-         TODO (kill other thread);
-         /*break;*/return EXIT_FAILURE;
-      }
-      TODO (something else)
-
-      /*memcpy (buf_out->buf, buf_in->buf, min (buf_in->n, buf_out->n));*/
-      memcpy (buf_out->buf, buf_in->buf, buf_in->n);
-
-      error_check (tscpaq_enqueue (&(args_out->q_out), buf_out) != 0) {
-         TODO (kill other thread);
-         /*break;*/return EXIT_FAILURE;
-      }
-      error_check (tscpaq_enqueue (&(args_in->q_in),   buf_in)  != 0) {
-         TODO (kill other thread);
-         /*break;*/return EXIT_FAILURE;
-      }
-   }
-   /*__builtin_unreachable ();*/
-
-   TODO (pthread join)
-   error_check (free_pipe (args_out) != 0) return EXIT_FAILURE;
-   error_check (free_pipe (args_in)  != 0) return EXIT_FAILURE;
-   return EXIT_SUCCESS;
-   /*return EXIT_FAILURE;*/
-}
-
-#endif
