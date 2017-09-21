@@ -27,7 +27,7 @@ int main (void) {
       STDIN_FILENO, STDOUT_FILENO,
       (size_t) 10, (size_t) 3,
       (size_t) 8,  (size_t) 3,
-      thrio_cb) != 0)
+      threv_cb) != 0)
       return EXIT_FAILURE;
    return EXIT_SUCCESS;
 }
