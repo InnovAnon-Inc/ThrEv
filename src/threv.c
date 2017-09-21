@@ -141,6 +141,8 @@ int threv (
    buffer_t *restrict buf_out;
 
    thread_cb.io = &dest;
+   thread_cb.in  = in;
+   thread_cb.out = out;
    worker_cb.io = &dest;
    worker_cb.cb = cb;
 
