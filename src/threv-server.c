@@ -459,7 +459,7 @@ static void *io_thread_cb (void *restrict _arg) {
    rd_watcher.in  = arg->in;
    wr_watcher.out = arg->out;
 
-#ifndef DO_ASYNC
+#ifdef DO_ASYNC
    while (true) {
       error_check (read_pipe (arg->in, STDIN_FILENO)  != 0) return NULL;
       error_check (write_pipe (arg->out, STDOUT_FILENO) != 0) return NULL;
