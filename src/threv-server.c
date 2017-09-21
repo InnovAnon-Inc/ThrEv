@@ -449,8 +449,6 @@ static void ev_write_cb (EV_P_ ev_io *restrict _w, int revents) {
 __attribute__ ((nonnull (1), nothrow, warn_unused_result))
 static void *io_thread_cb (void *restrict _arg) {
    io_t *restrict arg = (io_t *restrict) _arg;
-   pipe_t *restrict in;
-   pipe_t *restrict out;
 
    TODO (async should be optional. tradional io should also be possible)
    struct ev_loop *restrict loop = EV_DEFAULT;
@@ -463,8 +461,8 @@ static void *io_thread_cb (void *restrict _arg) {
 
 #ifndef DO_ASYNC
    while (true) {
-      error_check (read_pipe (in, STDIN_FILENO)  != 0) return NULL;
-      error_check (write_pipe (out, STDOUT_FILENO) != 0) return NULL;
+      error_check (read_pipe (arg->in, STDIN_FILENO)  != 0) return NULL;
+      error_check (write_pipe (arg->out, STDOUT_FILENO) != 0) return NULL;
    }
 #else
    rd_watcher.fd = STDIN_FILENO;
