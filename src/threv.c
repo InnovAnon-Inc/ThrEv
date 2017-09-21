@@ -58,7 +58,7 @@ static void ev_write_cb (EV_P_ ev_io *restrict _w, int revents) {
 }
 
 typedef struct {
-   io_t io;
+   io_t *restrict io;
    fd_t in;
    fd_t out;
 } thread_cb_t;
@@ -71,7 +71,7 @@ static void *rd_thread_cb (void *restrict _arg) {
 
    rd_watcher_t rd_watcher;
 
-   rd_watcher.in  = arg->io.in;
+   rd_watcher.in  = arg->io->in;
 
    rd_watcher.fd = arg->in;
    ev_io_init (&(rd_watcher.io), ev_read_cb, rd_watcher.fd, EV_READ);
@@ -88,7 +88,7 @@ static void *wr_thread_cb (void *restrict _arg) {
 
    wr_watcher_t wr_watcher;
 
-   wr_watcher.out = arg->io.out;
+   wr_watcher.out = arg->io->out;
 
    wr_watcher.fd = arg->out;
 
@@ -113,10 +113,15 @@ static int worker_thread_cb_cb (
    return 0;
 }
 
+typedef struct {
+   io_t *restrict io;
+   threv_cb_t cb;
+} worker_cb_t;
+
 __attribute__ ((nonnull (1), nothrow, warn_unused_result))
 static void *worker_thread_cb (void *restrict _arg) {
-   io_t *restrict arg = (io_t *restrict) _arg;
-   error_check (worker_io (arg, worker_thread_cb_cb, NULL) != 0) return NULL;
+   worker_cb_t *restrict arg = (worker_cb_t *restrict) _arg;
+   error_check (worker_io (arg->io, worker_thread_cb_cb, worker_cb->cb) != 0) return NULL;
    return NULL;
 }
 
@@ -126,34 +131,40 @@ int threv (
    size_t in_bufsz, size_t in_nbuf,
    size_t out_bufsz, size_t out_nbuf,
    threv_cb_t cb) {
-   thread_cb_t dest;
-   /*io_t dest*//*, src;*/
+   thread_cb_t thread_cb;
+   worker_cb_t worker_cb;
+   io_t dest/*, src*/;
    pthread_t rd_thread;
    pthread_t wr_thread;
    pthread_t worker_thread;
    buffer_t *restrict buf_in;
    buffer_t *restrict buf_out;
-   error_check (alloc_io (&(dest.io), /*&src,*/
+
+   thread_cb.io = &dest;
+   worker_cb.io = &dest;
+   worker_cb.cb = cb;
+
+   error_check (alloc_io (&dest, /*&src,*/
       in_bufsz, in_nbuf, out_bufsz, out_nbuf) != 0) return -1;
 
-   error_check (pthread_create (&rd_thread, NULL, rd_thread_cb, &dest) != 0) {
+   error_check (pthread_create (&rd_thread, NULL, rd_thread_cb, &thread_cb) != 0) {
 	#pragma GCC diagnostic push
 	#pragma GCC diagnostic ignored "-Wunused-result"
-      (void) free_io (&(dest.io));
+      (void) free_io (&dest);
 	#pragma GCC diagnostic pop
       return -2;
    }
-   error_check (pthread_create (&wr_thread, NULL, wr_thread_cb, &dest) != 0) {
+   error_check (pthread_create (&wr_thread, NULL, wr_thread_cb, &thread_cb) != 0) {
 	#pragma GCC diagnostic push
 	#pragma GCC diagnostic ignored "-Wunused-result"
-      (void) free_io (&(dest.io));
+      (void) free_io (&dest);
 	#pragma GCC diagnostic pop
       return -3;
    }
-   error_check (pthread_create (&worker_thread, NULL, worker_thread_cb, /*&src*/ &dest) != 0) {
+   error_check (pthread_create (&worker_thread, NULL, worker_thread_cb, /*&src*/ &worker_cb) != 0) {
 	#pragma GCC diagnostic push
 	#pragma GCC diagnostic ignored "-Wunused-result"
-      (void) free_io (&(dest.io));
+      (void) free_io (&dest);
 	#pragma GCC diagnostic pop
       return -4;
    }
@@ -161,26 +172,26 @@ int threv (
    error_check (pthread_join (rd_thread, NULL) != 0) {
 	#pragma GCC diagnostic push
 	#pragma GCC diagnostic ignored "-Wunused-result"
-      (void) free_io (&(dest.io));
+      (void) free_io (&dest);
 	#pragma GCC diagnostic pop
       return -5;
    }
    error_check (pthread_join (wr_thread, NULL) != 0) {
 	#pragma GCC diagnostic push
 	#pragma GCC diagnostic ignored "-Wunused-result"
-      (void) free_io (&(dest.io));
+      (void) free_io (&dest);
 	#pragma GCC diagnostic pop
       return -6;
    }
    error_check (pthread_join (worker_thread, NULL) != 0) {
 	#pragma GCC diagnostic push
 	#pragma GCC diagnostic ignored "-Wunused-result"
-      (void) free_io (&(dest.io));
+      (void) free_io (&dest);
 	#pragma GCC diagnostic pop
       return -7;
    }
 
-   error_check (free_io (&(dest.io)/*, &src*/) != 0) return -8;
+   error_check (free_io (&dest/*, &src*/) != 0) return -8;
 
    return 0;
 }
