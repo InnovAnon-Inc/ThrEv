@@ -184,7 +184,7 @@ static int worker_thread_cb_cb (
    buffer_t *restrict buf_out,
    buffer_t const *restrict buf_in,
    void *restrict unused) {
-   buf_out->n = min (buf_in->n, out->bufsz);
+   buf_out->n = min (buf_in->n, buf_out->bufsz);
    (void) memcpy (buf_out->buf, buf_in->buf, buf_out->n);
    return 0;
 }
