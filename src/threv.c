@@ -88,7 +88,7 @@ static void *wr_thread_cb (void *restrict _arg) {
 
    wr_watcher_t wr_watcher;
 
-   wr_watcher.out = arg->out.out;
+   wr_watcher.out = arg->io.out;
 
    wr_watcher.fd = arg->out;
 
@@ -103,7 +103,7 @@ __attribute__ ((nonnull (1, 2), nothrow, warn_unused_result))
 static int worker_thread_cb_cb (
    buffer_t *restrict buf_out,
    buffer_t const *restrict buf_in,
-   void *restrict unused) {
+   void *restrict _arg) {
    threv_cb_t *restrict arg = (threv_cb_t *restrict) _arg;
 
    TODO (init buf_out->n to out_bufsz below)
@@ -127,7 +127,7 @@ int threv (
    size_t out_bufsz, size_t out_nbuf,
    threv_cb_t cb) {
    thread_cb_t dest;
-   /*io_t dest*//*, src*/;
+   /*io_t dest*//*, src;*/
    pthread_t rd_thread;
    pthread_t wr_thread;
    pthread_t worker_thread;
