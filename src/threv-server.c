@@ -7,7 +7,7 @@
 
 #include <stdio.h> /* for puts */
 #include <stdlib.h>
-#include <strings.h>
+#include <string.h>
 #include <netinet/in.h>
 
 #include <glitter.h>
@@ -171,7 +171,7 @@ static void *wr_thread_cb (void *restrict _arg) {
 
 
 
-
+TODO (this macro has been moved to glitter.h)
 #ifndef min
 #define min(A, B) ((A) < (B) ? (A) : (B))
 #endif

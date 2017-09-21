@@ -11,8 +11,10 @@
 bin_PROGRAMS = threv-client threv-server
 threv_client_SOURCES = threv-client.c threv.h
 threv_server_SOURCES = threv-server.c threv.h
-threv_client_LDFLAGS = -lev -lm -lezudp-client -lrestart -ltscpaq -lcpaq -lthpool -lpthread
-threv_server_LDFLAGS = -lev -lm -lrestart -lthipe -ltscpaq -lcpaq -lpthread
+#threv_client_LDFLAGS = -lev -lm -lezudp-client -lrestart -ltscpaq -lcpaq -lthpool -lpthread
+#threv_server_LDFLAGS = -lev -lm -lrestart -lthipe -ltscpaq -lcpaq -lpthread
+threv_client_LIBADD = -lev -lm -lezudp-client -lrestart -ltscpaq -lcpaq -lthpool -lpthread
+threv_server_LIBADD = -lev -lm -lrestart -lthipe -ltscpaq -lcpaq -lpthread
 
 #threv_client_CFLAGS = -Wextra -pedantic -ansi
 #threv_server_CFLAGS = -Wextra -pedantic -ansi
