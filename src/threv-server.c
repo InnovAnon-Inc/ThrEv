@@ -461,6 +461,12 @@ static void *io_thread_cb (void *restrict _arg) {
    rd_watcher.in  = arg->in;
    wr_watcher.out = arg->out;
 
+#ifndef DO_ASYNC
+   while (true) {
+      error_check (read_pipe (in, STDIN_FILENO)  != 0) return NULL;
+      error_check (write_pipe (out, STDOUT_FILENO) != 0) return NULL;
+   }
+#else
    rd_watcher.fd = STDIN_FILENO;
    wr_watcher.fd = STDOUT_FILENO;
    ev_io_init (&(rd_watcher.io), ev_read_cb, rd_watcher.fd, EV_READ);
@@ -470,6 +476,7 @@ static void *io_thread_cb (void *restrict _arg) {
    ev_io_start (loop, (ev_io *) &wr_watcher);
 
    ev_run (loop, 0);
+#endif
    return NULL;
 }
 
