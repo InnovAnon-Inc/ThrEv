@@ -5,6 +5,8 @@
 #define _POSIX_C_SOURCE 200112L
 #define __STDC_VERSION__ 200112L
 
+#include <glitter.h>
+
 	#pragma GCC diagnostic push
 	#pragma GCC diagnostic ignored "-Wpadded"
 	#pragma GCC diagnostic ignored "-Wnested-externs"
@@ -124,33 +126,34 @@ int threv (
    size_t in_bufsz, size_t in_nbuf,
    size_t out_bufsz, size_t out_nbuf,
    threv_cb_t cb) {
-   io_t dest/*, src*/;
+   thread_cb_t dest;
+   /*io_t dest*//*, src*/;
    pthread_t rd_thread;
    pthread_t wr_thread;
    pthread_t worker_thread;
    buffer_t *restrict buf_in;
    buffer_t *restrict buf_out;
-   error_check (alloc_io (&dest, /*&src,*/
+   error_check (alloc_io (&(dest.io), /*&src,*/
       in_bufsz, in_nbuf, out_bufsz, out_nbuf) != 0) return -1;
 
    error_check (pthread_create (&rd_thread, NULL, rd_thread_cb, &dest) != 0) {
 	#pragma GCC diagnostic push
 	#pragma GCC diagnostic ignored "-Wunused-result"
-      (void) free_io (&dest);
+      (void) free_io (&(dest.io));
 	#pragma GCC diagnostic pop
       return -2;
    }
    error_check (pthread_create (&wr_thread, NULL, wr_thread_cb, &dest) != 0) {
 	#pragma GCC diagnostic push
 	#pragma GCC diagnostic ignored "-Wunused-result"
-      (void) free_io (&dest);
+      (void) free_io (&(dest.io));
 	#pragma GCC diagnostic pop
       return -3;
    }
    error_check (pthread_create (&worker_thread, NULL, worker_thread_cb, /*&src*/ &dest) != 0) {
 	#pragma GCC diagnostic push
 	#pragma GCC diagnostic ignored "-Wunused-result"
-      (void) free_io (&dest);
+      (void) free_io (&(dest.io));
 	#pragma GCC diagnostic pop
       return -4;
    }
@@ -158,26 +161,26 @@ int threv (
    error_check (pthread_join (rd_thread, NULL) != 0) {
 	#pragma GCC diagnostic push
 	#pragma GCC diagnostic ignored "-Wunused-result"
-      (void) free_io (&dest);
+      (void) free_io (&(dest.io));
 	#pragma GCC diagnostic pop
       return -5;
    }
    error_check (pthread_join (wr_thread, NULL) != 0) {
 	#pragma GCC diagnostic push
 	#pragma GCC diagnostic ignored "-Wunused-result"
-      (void) free_io (&dest);
+      (void) free_io (&(dest.io));
 	#pragma GCC diagnostic pop
       return -6;
    }
    error_check (pthread_join (worker_thread, NULL) != 0) {
 	#pragma GCC diagnostic push
 	#pragma GCC diagnostic ignored "-Wunused-result"
-      (void) free_io (&dest);
+      (void) free_io (&(dest.io));
 	#pragma GCC diagnostic pop
       return -7;
    }
 
-   error_check (free_io (&dest/*, &src*/) != 0) return -8;
+   error_check (free_io (&(dest.io)/*, &src*/) != 0) return -8;
 
    return 0;
 }
