@@ -40,7 +40,10 @@ TODO (ev_rw_cb_common ())
 
 __attribute__ ((nonnull (1), nothrow))
 static void ev_read_cb (EV_P_ ev_io *restrict _w, int revents) {
+	#pragma GCC diagnostic push
+	#pragma GCC diagnostic ignored "-Wstrict-aliasing"
    rd_watcher_t *restrict w = (rd_watcher_t *restrict) _w;
+	#pragma GCC diagnostic pop
    TODO (check revents)
    error_check (read_pipe (w->in, w->fd)  != 0) {
       TODO (stop ev loop)
@@ -49,7 +52,10 @@ static void ev_read_cb (EV_P_ ev_io *restrict _w, int revents) {
 }
 __attribute__ ((nonnull (1), nothrow))
 static void ev_write_cb (EV_P_ ev_io *restrict _w, int revents) {
+	#pragma GCC diagnostic push
+	#pragma GCC diagnostic ignored "-Wstrict-aliasing"
    wr_watcher_t *restrict w = (wr_watcher_t *restrict) _w;
+	#pragma GCC diagnostic pop
    TODO (check revents)
    error_check (write_pipe (w->out, w->fd) != 0) {
       TODO (stop ev loop)
@@ -74,8 +80,11 @@ static void *rd_thread_cb (void *restrict _arg) {
    rd_watcher.in  = arg->io->in;
 
    rd_watcher.fd = arg->in;
+	#pragma GCC diagnostic push
+	#pragma GCC diagnostic ignored "-Wstrict-aliasing"
    ev_io_init (&(rd_watcher.io), ev_read_cb, rd_watcher.fd, EV_READ);
    ev_io_start (loop, (ev_io *) &rd_watcher);
+	#pragma GCC diagnostic pop
 
    ev_run (loop, 0);
    return NULL;
@@ -92,8 +101,11 @@ static void *wr_thread_cb (void *restrict _arg) {
 
    wr_watcher.fd = arg->out;
 
+	#pragma GCC diagnostic push
+	#pragma GCC diagnostic ignored "-Wstrict-aliasing"
    ev_io_init (&(wr_watcher.io), ev_write_cb, wr_watcher.fd, EV_WRITE);
    ev_io_start (loop, (ev_io *) &wr_watcher);
+	#pragma GCC diagnostic pop
 
    ev_run (loop, 0);
    return NULL;
