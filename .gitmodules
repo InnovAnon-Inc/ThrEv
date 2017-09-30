@@ -13,3 +13,6 @@
 [submodule "libev"]
 	path = libev
 	url = https://github.com/enki/libev.git
+[submodule "CPAQ"]
+	path = CPAQ
+	url = https://github.com/InnovAnon-Inc/CPAQ.git
