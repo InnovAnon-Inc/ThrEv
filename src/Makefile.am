@@ -1,13 +1,13 @@
 AM_CPPFLAGS = -D__STDC_INT64__
 
 SUBDIRS = ../glitter
-AM_CPPFLAGS += -I ../glitter/src
+AM_CPPFLAGS += -I $(top_srcdir)/glitter/src
 
 SUBDIRS += ../TSCPAQ
-AM_CPPFLAGS += -I ../TSCPAQ/src
+AM_CPPFLAGS += -I $(top_srcdir)/TSCPAQ/src
 
 SUBDIRS += ../ThIpe
-AM_CPPFLAGS += -I ../ThIpe/src
+AM_CPPFLAGS += -I $(top_srcdir)/ThIpe/src
 
 LIBTHREV_LIBADD  = ../ThIpe/src/.libs/libthipe.la $(LIBTHIPE_LIBADD)
 LIBTHREV_LIBADD += -lev
