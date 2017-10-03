@@ -46,7 +46,8 @@ static void ev_read_cb (EV_P_ ev_io *restrict _w, int revents) {
 	#pragma GCC diagnostic pop
    TODO (check revents)
    error_check (read_pipe (w->in, w->fd)  != 0) {
-      TODO (stop ev loop)
+      ev_io_stop (EV_A_ _w);
+      ev_break (EV_A_ EVBREAK_ALL);
       return;
    }
 }
@@ -58,7 +59,8 @@ static void ev_write_cb (EV_P_ ev_io *restrict _w, int revents) {
 	#pragma GCC diagnostic pop
    TODO (check revents)
    error_check (write_pipe (w->out, w->fd) != 0) {
-      TODO (stop ev loop)
+      ev_io_stop (EV_A_ _w);
+      ev_break (EV_A_ EVBREAK_ALL);
       return;
    }
 }
