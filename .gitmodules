@@ -19,3 +19,6 @@
 [submodule "restart"]
 	path = restart
 	url = https://github.com/InnovAnon-Inc/restart.git
+[submodule "MultiMalloc"]
+	path = MultiMalloc
+	url = https://github.com/InnovAnon-Inc/MultiMalloc.git
