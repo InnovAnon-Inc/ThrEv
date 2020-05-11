@@ -32,6 +32,12 @@ AC_CHECK_LIB([io],[alloc_io,free_io])
 #AC_CHECK_LIB([ezudp-server],[ezudp_server])
 #AC_CHECK_LIB([thpool],[thpool_init,thpool_add_work,thpool_wait,thpool_pause,thpool_resume,thpool_destroy,thpool_num_threads_working])
 
+LIBTHREV_LIBADD="`PATH=src:$PATH libthrev_config --libs`"
+AC_SUBST(LIBTHREV_LIBADD)
+
+THREV_TEST_LIBADD="libthrev.la `PATH=src:$PATH threv_test_config --libs`"
+AC_SUBST(THREV_TEST_LIBADD)
+
 INNOVANON_WARNINGS([])
 
 AC_OUTPUT
