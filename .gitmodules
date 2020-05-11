@@ -10,9 +10,6 @@
 [submodule "TSCPAQ"]
 	path = TSCPAQ
 	url = https://github.com/InnovAnon-Inc/TSCPAQ.git
-[submodule "CPAQ"]
-	path = CPAQ
-	url = https://github.com/InnovAnon-Inc/CPAQ.git
 [submodule "restart"]
 	path = restart
 	url = https://github.com/InnovAnon-Inc/restart.git
