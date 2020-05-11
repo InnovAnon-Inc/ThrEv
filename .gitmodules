@@ -1,9 +1,6 @@
 [submodule "m4"]
 	path = m4
 	url = https://github.com/InnovAnon-Inc/m4-common.git
-[submodule "ThIpe"]
-	path = ThIpe
-	url = https://github.com/InnovAnon-Inc/ThIpe.git
 [submodule "restart"]
 	path = restart
 	url = https://github.com/InnovAnon-Inc/restart.git
