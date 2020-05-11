@@ -16,9 +16,6 @@
 [submodule "restart"]
 	path = restart
 	url = https://github.com/InnovAnon-Inc/restart.git
-[submodule "MultiMalloc"]
-	path = MultiMalloc
-	url = https://github.com/InnovAnon-Inc/MultiMalloc.git
 [submodule "PArray"]
 	path = PArray
 	url = https://github.com/InnovAnon-Inc/PArray.git
