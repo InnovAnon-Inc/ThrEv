@@ -4,9 +4,6 @@
 [submodule "ThIpe"]
 	path = ThIpe
 	url = https://github.com/InnovAnon-Inc/ThIpe.git
-[submodule "TSCPAQ"]
-	path = TSCPAQ
-	url = https://github.com/InnovAnon-Inc/TSCPAQ.git
 [submodule "restart"]
 	path = restart
 	url = https://github.com/InnovAnon-Inc/restart.git
