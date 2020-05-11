@@ -1,4 +1,5 @@
 #include $(top_srcdir)/ThIpe/src/Makefile-LIBADD.inc
+include ../ThIpe/src/Makefile-LIBADD.inc
 
 #if USE_SUBMODULES
 #LIBTHREV_LIBADD  = ../ThIpe/src/.libs/libthipe.la $(LIBTHIPE_LIBADD)
