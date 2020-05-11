@@ -7,6 +7,3 @@
 [submodule "restart"]
 	path = restart
 	url = https://github.com/InnovAnon-Inc/restart.git
-[submodule "swap"]
-	path = swap
-	url = https://github.com/InnovAnon-Inc/swap.git
