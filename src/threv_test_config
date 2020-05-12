@@ -2,5 +2,5 @@
 set -eu
 [ $# -eq 1 ]
 [ $1 == --libs ]
-libthrev_config --libs
+echo -lthrev `libthrev_config --libs`
 
