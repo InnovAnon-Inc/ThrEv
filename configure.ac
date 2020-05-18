@@ -37,7 +37,7 @@ AC_CHECK_LIB([pthread],[pthread_create,pthread_join])
 
 PKG_CHECK_MODULES([GLITTER],[glitter],,)
 PKG_CHECK_MODULES([IO],[libio],,)
-PKG_CHECK_MODULES([EV],[libev],,)
+#PKG_CHECK_MODULES([EV],[libev],,)
 
 INNOVANON_WARNINGS([])
 
