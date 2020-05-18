@@ -1,0 +1,15 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+#threv_utility=threv-test
+
+Name: @PACKAGE_NAME@
+Description: threv library
+Version: @PACKAGE_VERSION@
+Libs: -L${libdir} -lthrev
+Cflags: -I${includedir}
+Requires: glitter
+Requires.private: libio
+
