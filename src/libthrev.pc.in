@@ -13,5 +13,6 @@ Cflags: -I${includedir}
 Requires: glitter
 Requires.private: libio
 #Libs.private: -lpthread libev
-Libs.private: -lpthread -lev
+#Libs.private: -lpthread -lev
+Libs.private: @PTHREAD_CFLAGS@ @PTHREAD_LIBS@ @EV_CFLAGS@ @EV_LIBS@
 
